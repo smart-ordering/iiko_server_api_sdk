@@ -2,8 +2,8 @@ use crate::client::IikoClient;
 use crate::error::Result;
 use crate::xml::request::{DocumentsRequest, Request};
 use crate::xml::response::{
-    Document, DocumentValidationResult, IncomingInvoiceDto, OutgoingInvoiceDto,
-    OutgoingInvoiceDtoes,
+    Document, DocumentValidationResult, IncomingInventoryDto, IncomingInventoryValidationResultDto,
+    IncomingInvoiceDto, OutgoingInvoiceDto, OutgoingInvoiceDtoes, ReturnedInvoiceDto,
 };
 use quick_xml::{de::from_str, se::to_string};
 
@@ -106,6 +106,79 @@ impl<'a> DocumentsEndpoint<'a> {
 
         // Парсим XML ответ
         let result: DocumentValidationResult = from_str(&response_xml)?;
+        Ok(result)
+    }
+
+    /// Импорт возвратной накладной
+    ///
+    /// # Версия iiko: 4.4
+    /// # Endpoint: POST `/documents/import/returnedInvoice`
+    ///
+    /// # Параметры запроса:
+    /// - `invoice`: Возвратная накладная (ReturnedInvoiceDto)
+    ///
+    /// # Формат даты:
+    /// - `dateIncoming`: yyyy-MM-ddTHH:mm:ss или yyyy-MM-dd
+    /// - `incomingInvoiceDate`: yyyy-MM-ddTHH:mm:ss или yyyy-MM-dd
+    ///
+    /// # Что в ответе:
+    /// - Результат валидации документа (DocumentValidationResult)
+    ///
+    /// # Важно:
+    /// - Content-Type: application/xml
+    /// - `incomingInvoiceNumber` и `incomingInvoiceDate` - обязательные поля
+    /// - При создании накладных с проведением обязателен склад (defaultStoreId или defaultStoreCode)
+    /// - Склад заполняется либо в документе, либо в каждой строке отдельно, но не одновременно
+    /// - В каждой позиции документа должно быть указано хотя бы одно из полей: `productId` или `productArticle`
+    pub async fn import_returned_invoice(
+        &self,
+        invoice: ReturnedInvoiceDto,
+    ) -> Result<DocumentValidationResult> {
+        // Сериализуем документ в XML
+        let xml_body = to_string(&invoice)?;
+        
+        let response_xml = self
+            .client
+            .post_xml("documents/import/returnedInvoice", &xml_body)
+            .await?;
+
+        // Парсим XML ответ
+        let result: DocumentValidationResult = from_str(&response_xml)?;
+        Ok(result)
+    }
+
+    /// Импорт инвентаризации
+    ///
+    /// # Версия iiko: 5.1
+    /// # Endpoint: POST `/documents/import/incomingInventory`
+    ///
+    /// # Параметры запроса:
+    /// - `inventory`: Инвентаризация (IncomingInventoryDto)
+    ///
+    /// # Формат даты:
+    /// - `dateIncoming`: yyyy-MM-ddTHH:mm:ss или yyyy-MM-dd
+    ///
+    /// # Что в ответе:
+    /// - Результат валидации документа инвентаризации (IncomingInventoryValidationResultDto)
+    ///
+    /// # Важно:
+    /// - Content-Type: application/xml
+    /// - Склад (storeId или storeCode) - обязателен для заполнения
+    /// - Для одного элемента номенклатуры можно передавать несколько строк, но статус у них должен быть одинаковым
+    pub async fn import_incoming_inventory(
+        &self,
+        inventory: IncomingInventoryDto,
+    ) -> Result<IncomingInventoryValidationResultDto> {
+        // Сериализуем документ в XML
+        let xml_body = to_string(&inventory)?;
+        
+        let response_xml = self
+            .client
+            .post_xml("documents/import/incomingInventory", &xml_body)
+            .await?;
+
+        // Парсим XML ответ
+        let result: IncomingInventoryValidationResultDto = from_str(&response_xml)?;
         Ok(result)
     }
 

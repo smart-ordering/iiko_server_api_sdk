@@ -9,6 +9,8 @@ pub mod events;
 pub mod images;
 pub mod products;
 pub mod product_scales;
+pub mod reports;
+pub mod entities;
 
 pub use assembly_charts::*;
 pub use auth::*;
@@ -21,4 +23,6 @@ pub use events::*;
 pub use images::*;
 pub use products::*;
 pub use product_scales::*;
+pub use reports::*;
+pub use entities::*;
 

@@ -10,25 +10,41 @@ pub use error::{IikoError, Result};
 
 // Re-export commonly used types
 pub use xml::response::{
-    AssemblyChartDto, AssemblyChartItemDto, BarcodeDto, ChartResultDto, ChoiceBindingDto,
-    ContainerDto, CorporateItemDto, CorporationSettings, DistributionAlgorithmType, Document,
-    DocumentStatus, DocumentValidationResult, EntityDto, Event, EventAttribute, EventsList,
-    GroupDto, GroupServiceMode, GroupsList, IdCodeDto, IdListDto, ImageDto, ImageOperationResult,
-    ImageSaveRequest, IncomingInvoiceDto, IncomingInvoiceItemDto, IncomingInvoiceItems,
-    OutgoingInvoiceDto, OutgoingInvoiceItemDto, OutgoingInvoiceItems, PreparedChartDto,
+    AssemblyChartDto, AssemblyChartItemDto, BalanceCounteragent, BalanceStore, BarcodeDto,
+    ChartResultDto, ChoiceBindingDto, ContainerDto, CorporateItemDto, CorporationSettings,
+    BudgetPlanItemDto, BudgetPlanItemValueType, ColumnCaptions, DateDetalization,
+    DateRangeFilter, DayDishValue, DeliveryConsolidatedReport, DeliveryConsolidatedRow,
+    DeliveryCourierMetric, DeliveryCouriersReport, DeliveryCouriersRow,
+    DeliveryHalfHourDetailedReport, DeliveryHalfHourDetailedRow, DeliveryHalfHourMetric,
+    DeliveryLoyaltyRegion, DeliveryLoyaltyReport, DeliveryLoyaltyRow, DeliveryMetricType,
+    DeliveryOrderCycleReport, DeliveryOrderCycleRow, DeliveryRegionsReport, DeliveryRegionsRow,
+    DeliveryType, DocumentTypeList, IngredientEntryDto, KeyValue, StoreDataDirection,
+    StoreDocumentType, StoreFilterList, StoreOperationsReportGrouping, StoreReportFilter,
+    StoreReportItemDto, StoreReportPreset, StoreTransactionType, TransactionTypeList,
+    DistributionAlgorithmType, Document, DocumentStatus, DocumentValidationResult,
+    EgaisBRegDto, EgaisMarkStateDto, EgaisMarksList, EntityDto, EntityType, Event, EventAttribute,
+    EventsList, FilterType, GroupDto, GroupServiceMode, GroupsList, IdCodeDto, IdCodeNameDto,
+    IdListDto, ImageDto, ImageOperationResult, ImageSaveRequest, IncomingInventoryDto,
+    IncomingInventoryItemDto, IncomingInventoryItems, IncomingInventoryValidationResultDto,
+    IncomingInventoryValidationResultItemDto, IncomingInventoryValidationResultItems,
+    IncomingInvoiceDto, IncomingInvoiceItemDto, IncomingInvoiceItems, InventoryItemStatus,
+    OlapColumnInfo, OlapColumns, OlapFieldValue, OlapFilter, OlapReportRequest, OlapReportResponse, OlapReportType, OlapReportTypeV1,
+    OrderServiceType, OutgoingInvoiceDto, OutgoingInvoiceItemDto, OutgoingInvoiceItems, PeriodType,
+    PreparedChartDto, ReferenceEntity, ReferenceEntityDto,
     PreparedChartItemDto, ProductDto, ProductGroupDto, ProductOperationResult,
     ProductProductScaleRequest, ProductScaleDto, ProductScaleOperationResult,
     ProductScaleSaveRequest, ProductScaleUpdateRequest, ProductSizeAssemblyStrategy,
     ProductSizeDto, ProductSizeFactorDto, ProductSizeProductRequest, ProductSizeSaveDto,
-    ProductType, ProductWriteoffStrategy, ProductsOperationResult, ReplicationStatus, ServerType,
+    ProductType, ProductWriteoffStrategy, ProductsOperationResult, RangeFilter, ReplicationStatus,
+    ReturnedInvoiceDto, ReturnedInvoiceItemDto, ReturnedInvoiceItems, ServerType,
     StoreSpecification, Supplier, SupplierContainerDto, SupplierPriceList,
-    SupplierPriceListItemDto, Suppliers, TerminalDto,
+    SupplierPriceListItemDto, Suppliers, TerminalDto, ValueFilter,
 };
 
 use endpoints::{
-    AssemblyChartsEndpoint, AuthEndpoint, CorporationEndpoint, DocumentsEndpoint, EventsEndpoint,
-    ImagesEndpoint, InventoryEndpoint, ProductScalesEndpoint, ProductsEndpoint,
-    ReplicationEndpoint, SuppliersEndpoint,
+    AssemblyChartsEndpoint, AuthEndpoint, CorporationEndpoint, DocumentsEndpoint, EntitiesEndpoint,
+    EventsEndpoint, ImagesEndpoint, InventoryEndpoint, ProductScalesEndpoint, ProductsEndpoint,
+    ReplicationEndpoint, ReportsEndpoint, SuppliersEndpoint,
 };
 
 impl IikoClient {
@@ -74,5 +90,13 @@ impl IikoClient {
 
     pub fn product_scales(&self) -> ProductScalesEndpoint<'_> {
         ProductScalesEndpoint::new(self)
+    }
+
+    pub fn reports(&self) -> ReportsEndpoint<'_> {
+        ReportsEndpoint::new(self)
+    }
+
+    pub fn entities(&self) -> EntitiesEndpoint<'_> {
+        EntitiesEndpoint::new(self)
     }
 }

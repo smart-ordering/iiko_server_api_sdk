@@ -58,6 +58,74 @@ cargo test --test integration_test
 ```
 
 
+### Доступные методы API
+
+#### Отчеты (Reports)
+
+**OLAP отчеты (версия 4.1+):**
+- `client.reports().get_olap_columns(report_type)` - Получить список полей OLAP-отчета
+- `client.reports().get_olap_report(request)` - Получить OLAP-отчет (POST запрос с фильтрами)
+- `client.reports().get_olap_report_v1(report, from, to, ...)` - Получить OLAP-отчет (версия 3.9, GET запрос)
+
+**Отчеты по балансам:**
+- `client.reports().get_balance_counteragents(...)` - Баланс по счету, контрагенту и подразделению (iiko 5.2)
+- `client.reports().get_balance_stores(...)` - Остаток товара на складе (iiko 5.2)
+
+**Отчеты по доставке:**
+- `client.reports().get_delivery_consolidated(...)` - Сводный отчет по доставке
+- `client.reports().get_delivery_couriers(...)` - Отчет по курьерам
+- `client.reports().get_delivery_order_cycle(...)` - Отчет по циклу заказа
+- `client.reports().get_delivery_half_hour_detailed(...)` - Получасовой детальный отчет
+- `client.reports().get_delivery_regions(...)` - Отчет по регионам доставки
+- `client.reports().get_delivery_loyalty(...)` - Отчет по лояльности доставки
+
+**Отчеты по складским операциям (iiko 3.9):**
+- `client.reports().get_store_operations(...)` - Отчет по складским операциям
+- `client.reports().get_store_report_presets()` - Пресеты отчетов по складским операциям
+
+**Другие отчеты (iiko 3.9):**
+- `client.reports().get_product_expense(...)` - Расход продуктов по продажам
+- `client.reports().get_sales(...)` - Отчет по выручке
+- `client.reports().get_monthly_income_plan(...)` - План по выручке за день
+- `client.reports().get_ingredient_entry(...)` - Отчет о вхождении товара в блюдо
+
+**Другие отчеты:**
+- `client.reports().get_egais_marks_list(...)` - Список акцизных марок (iiko 7.4)
+
+#### Документы (Documents)
+- `client.documents().get_documents(...)` - Получить список документов
+- `client.documents().import_incoming_invoice(...)` - Импорт приходной накладной
+- `client.documents().import_outgoing_invoice(...)` - Импорт расходной накладной
+- `client.documents().unprocess_incoming_invoice(...)` - Распроведение приходной накладной (iiko 7.7)
+- `client.documents().unprocess_outgoing_invoice(...)` - Распроведение расходной накладной (iiko 7.7)
+- `client.documents().export_outgoing_invoice(...)` - Экспорт расходных накладных (iiko 5.4)
+- `client.documents().export_outgoing_invoice_by_number(...)` - Экспорт расходной накладной по номеру (iiko 5.4)
+- `client.documents().import_returned_invoice(...)` - Импорт возвратной накладной (iiko 4.4)
+- `client.documents().import_incoming_inventory(...)` - Импорт инвентаризации (iiko 5.1)
+
+#### Справочники (Entities)
+- `client.entities().list(...)` - Получить справочную информацию (iiko 5.0)
+- `client.entities().list_with_extended_fields(...)` - Получить справочную информацию с расширенными полями
+- `client.entities().get_ids(...)` - Получить идентификаторы сущностей (iiko 9.1)
+
+#### Товары (Products)
+- `client.products().get_products(...)` - Получить список товаров
+- `client.products().create_product(...)` - Создать товар
+- `client.products().update_product(...)` - Обновить товар
+- И другие методы для работы с товарами, категориями и группами
+
+#### Поставщики (Suppliers)
+- `client.suppliers().get_suppliers(...)` - Получить список поставщиков
+- `client.suppliers().get_pricelist(...)` - Получить прайс-лист поставщика
+
+#### Инвентаризация (Inventory)
+- `client.inventory().get_items(...)` - Получить список позиций инвентаризации
+
+#### Корпорация (Corporation)
+- `client.corporation().get_departments(...)` - Получить список подразделений
+- `client.corporation().get_groups(...)` - Получить список групп
+- `client.corporation().get_terminals(...)` - Получить список терминалов
+
 ### HTTP методы (низкоуровневые)
 - `client.get(endpoint)` - GET запрос
 - `client.get_with_params(endpoint, params)` - GET с параметрами
@@ -91,10 +159,20 @@ SDK автоматически обрабатывает HTTP статусы со
 3. **OLAP отчеты**: 
    - Используйте `build-summary=false` если не нужны общие результаты
    - Рекомендуется использовать не более 7 полей
+   - Для iiko версии 5.5+ обязательно используйте фильтр по полю `OpenDate.Typed` для отчетов по продажам
+   - Полный список доступных полей OLAP-отчета по продажам см. в [документации полей OLAP-отчета](docs/OLAP_FIELDS.md)
 
-4. **Лицензии**: При авторизации занимается один слот лицензии. Используйте `logout()` для освобождения лицензии.
+4. **Отчеты по доставке**: 
+   - Все отчеты по доставке возвращают данные в XML формате
+   - Параметры `department` принимают формат `{code="005"}` или `{id="guid"}`
 
-5. **Проверка лицензий**: Получить количество свободных слотов можно запросом:
+5. **Отчеты по складским операциям**: 
+   - Отчеты версии 3.9 возвращают данные в XML формате
+   - Можно использовать пресеты для упрощения запросов
+
+6. **Лицензии**: При авторизации занимается один слот лицензии. Используйте `logout()` для освобождения лицензии.
+
+7. **Проверка лицензий**: Получить количество свободных слотов можно запросом:
    ```rust
    client.get_with_params("licence/info", &[("moduleId", "28008806")]).await?;
    ```
@@ -117,7 +195,10 @@ iiko-sdk/
 │  │   │   ├─ replication.rs   # Репликация
 │  │   │   ├─ inventory.rs     # Инвентаризация
 │  │   │   ├─ suppliers.rs     # Поставщики
-│  │   │   └─ documents.rs      # Документы
+│  │   │   ├─ documents.rs      # Документы
+│  │   │   ├─ reports.rs        # Отчеты
+│  │   │   ├─ entities.rs       # Справочники
+│  │   │   └─ products.rs       # Товары
 │  │   └─ mod.rs
 │  ├─ endpoints/        # API endpoints
 │  │   ├─ auth.rs
@@ -126,12 +207,19 @@ iiko-sdk/
 │  │   ├─ inventory.rs
 │  │   ├─ suppliers.rs
 │  │   ├─ documents.rs
+│  │   ├─ reports.rs
+│  │   ├─ entities.rs
+│  │   ├─ products.rs
 │  │   └─ mod.rs
 │  └─ lib.rs
 └─ tests/
    ├─ integration_test.rs
    ├─ corporation_test.rs
-   └─ replication_test.rs
+   ├─ replication_test.rs
+   ├─ documents_test.rs
+   ├─ reports_test.rs
+   ├─ entities_test.rs
+   └─ products_test.rs
 ```
 
 ### Организация кода

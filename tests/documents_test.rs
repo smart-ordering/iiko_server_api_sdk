@@ -2,8 +2,10 @@ mod common;
 use chrono::Datelike;
 use common::{cleanup_after_test, get_test_client};
 use iiko_server_api_sdk::{
-    DocumentStatus, IncomingInvoiceDto, IncomingInvoiceItemDto, IncomingInvoiceItems,
-    OutgoingInvoiceDto, OutgoingInvoiceItemDto, OutgoingInvoiceItems,
+    DocumentStatus, IncomingInventoryDto, IncomingInventoryItemDto, IncomingInventoryItems,
+    IncomingInvoiceDto, IncomingInvoiceItemDto, IncomingInvoiceItems, InventoryItemStatus,
+    OutgoingInvoiceDto, OutgoingInvoiceItemDto, OutgoingInvoiceItems, ReturnedInvoiceDto,
+    ReturnedInvoiceItemDto, ReturnedInvoiceItems,
 };
 
 #[tokio::test]
@@ -856,7 +858,11 @@ async fn test_export_outgoing_invoice_by_number() {
         .await
         .expect("Failed to export outgoing invoice by number");
 
-    println!("Found {} invoices with number {}", invoices.len(), test_number);
+    println!(
+        "Found {} invoices with number {}",
+        invoices.len(),
+        test_number
+    );
 
     for (idx, invoice) in invoices.iter().take(3).enumerate() {
         println!(
@@ -902,7 +908,10 @@ async fn test_export_outgoing_invoice_by_number_current_year() {
         .and_then(|inv| inv.document_number.as_ref())
         .expect("Invoice must have a document number");
 
-    println!("Testing with document number: {} (current year)", test_number);
+    println!(
+        "Testing with document number: {} (current year)",
+        test_number
+    );
 
     // Экспортируем по номеру только за текущий год (current_year = true)
     let invoices = client
@@ -926,6 +935,292 @@ async fn test_export_outgoing_invoice_by_number_current_year() {
             invoice.date_incoming,
             invoice.status
         );
+    }
+
+    cleanup_after_test(&client).await;
+}
+#[tokio::test]
+async fn test_import_returned_invoice() {
+    let client = get_test_client().await;
+
+    // Сначала создаем приходную накладную, чтобы потом вернуть её
+    let products = client
+        .products()
+        .list(Some(false), None, None, None, None, None)
+        .await
+        .expect("Failed to get products");
+
+    assert!(!products.is_empty(), "No products found");
+    let product = products.first().unwrap();
+    let product_id = product.id.expect("Product must have an ID");
+
+    let suppliers = client
+        .suppliers()
+        .list(None)
+        .await
+        .expect("Failed to get suppliers");
+
+    assert!(!suppliers.is_empty(), "No suppliers found");
+    let supplier = suppliers.first().unwrap();
+    let supplier_id = supplier.id;
+
+    let stores = client
+        .corporation()
+        .get_stores(None)
+        .await
+        .expect("Failed to get stores");
+
+    assert!(!stores.is_empty(), "No stores found");
+    let store = stores.first().unwrap();
+    let store_id = store.id;
+
+    let now = chrono::Local::now();
+    let date_incoming = now.format("%d.%m.%Y").to_string();
+    let incoming_invoice_number = format!("INV-RET-{}", now.timestamp());
+    let incoming_invoice_date = now.format("%Y-%m-%d").to_string();
+
+    // Создаем приходную накладную
+    let incoming_invoice = IncomingInvoiceDto {
+        items: Some(IncomingInvoiceItems {
+            items: vec![IncomingInvoiceItemDto {
+                is_additional_expense: false,
+                amount: Some(10.0),
+                supplier_product: None,
+                supplier_product_article: None,
+                product: Some(product_id),
+                product_article: None,
+                producer: None,
+                num: 1,
+                container_id: None,
+                amount_unit: None,
+                actual_unit_weight: None,
+                sum: 1000.0,
+                discount_sum: Some(0.0),
+                vat_percent: Some(12.0),
+                vat_sum: Some(107.14),
+                price_unit: None,
+                price: Some(100.0),
+                price_without_vat: None,
+                code: None,
+                store: Some(store_id),
+                customs_declaration_number: None,
+                actual_amount: Some(10.0),
+            }],
+        }),
+        id: None,
+        conception: None,
+        conception_code: None,
+        comment: Some("Test invoice for return".to_string()),
+        document_number: Some(incoming_invoice_number.clone()),
+        date_incoming: Some(date_incoming.clone()),
+        invoice: None,
+        default_store: Some(store_id),
+        supplier: Some(supplier_id),
+        due_date: None,
+        incoming_date: Some(incoming_invoice_date.clone()),
+        use_default_document_time: false,
+        status: Some(DocumentStatus::New),
+        incoming_document_number: None,
+        employee_pass_to_account: None,
+        transport_invoice_number: None,
+        linked_outgoing_invoice_id: None,
+        distribution_algorithm: None,
+    };
+
+    // Импортируем приходную накладную
+    let import_result = client
+        .documents()
+        .import_incoming_invoice(incoming_invoice)
+        .await
+        .expect("Failed to import incoming invoice");
+
+    println!(
+        "Incoming invoice import result: valid={}, warning={}, document_number={:?}",
+        import_result.valid, import_result.warning, import_result.document_number
+    );
+
+    if !import_result.valid {
+        if let Some(error) = &import_result.error_message {
+            println!("Import error: {}", error);
+        }
+        println!("Skipping returned invoice test - incoming invoice import failed");
+        cleanup_after_test(&client).await;
+        return;
+    }
+
+    // Используем номер из результата или исходный номер
+    let final_incoming_number = import_result
+        .document_number
+        .as_ref()
+        .unwrap_or(&incoming_invoice_number);
+
+    // Ждем немного, чтобы документ был обработан
+    tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+
+    // Создаем возвратную накладную
+    let returned_invoice_date = now.format("%Y-%m-%dT%H:%M:%S").to_string();
+    let returned_invoice = ReturnedInvoiceDto {
+        document_number: Some(format!("RET-{}", now.timestamp())),
+        date_incoming: Some(returned_invoice_date.clone()),
+        use_default_document_time: false,
+        status: Some(DocumentStatus::New),
+        incoming_invoice_number: final_incoming_number.clone(),
+        incoming_invoice_date: incoming_invoice_date.clone(),
+        store_cost_affected: false,
+        account_to_code: Some("5.01".to_string()),
+        default_store_id: Some(store_id.to_string()),
+        default_store_code: store.code.as_ref().map(|c| c.clone()),
+        counteragent_id: Some(supplier_id.to_string()),
+        counteragent_code: None,
+        conception_id: None,
+        conception_code: None,
+        comment: Some("Test returned invoice".to_string()),
+        items: Some(ReturnedInvoiceItems {
+            items: vec![ReturnedInvoiceItemDto {
+                product_id: Some(product_id.to_string()),
+                product_article: product.num.as_ref().map(|a| a.clone()),
+                supplier_product: None,
+                supplier_product_article: None,
+                customs_declaration_number: None,
+                store_id: Some(store_id.to_string()),
+                store_code: store.code.as_ref().map(|c| c.clone()),
+                container_id: None,
+                container_code: None,
+                price: 100.0,
+                amount: 5.0, // Возвращаем половину
+                sum: 500.0,
+                discount_sum: Some(0.0),
+                vat_percent: Some(12.0),
+                vat_sum: Some(53.57),
+            }],
+        }),
+    };
+
+    // Импортируем возвратную накладную
+    let result = client
+        .documents()
+        .import_returned_invoice(returned_invoice)
+        .await
+        .expect("Failed to import returned invoice");
+
+    println!(
+        "Returned invoice import result: valid={}, warning={}",
+        result.valid, result.warning
+    );
+    if let Some(doc_num) = &result.document_number {
+        println!("Document number: {}", doc_num);
+    }
+    if let Some(error) = &result.error_message {
+        println!("Error message: {}", error);
+    }
+    if let Some(info) = &result.additional_info {
+        println!("Additional info: {}", info);
+    }
+
+    cleanup_after_test(&client).await;
+}
+
+#[tokio::test]
+async fn test_import_incoming_inventory() {
+    let client = get_test_client().await;
+
+    // Получаем необходимые данные
+    let products = client
+        .products()
+        .list(Some(false), None, None, None, None, None)
+        .await
+        .expect("Failed to get products");
+
+    assert!(!products.is_empty(), "No products found");
+    let product = products.first().unwrap();
+    let product_id = product.id.expect("Product must have an ID");
+
+    let stores = client
+        .corporation()
+        .get_stores(None)
+        .await
+        .expect("Failed to get stores");
+
+    assert!(!stores.is_empty(), "No stores found");
+    let store = stores.first().unwrap();
+    let store_id = store.id.to_string();
+    let store_code = store.code.as_ref().map(|c| c.clone());
+
+    let now = chrono::Local::now();
+    let date_incoming = now.format("%Y-%m-%dT%H:%M:%S").to_string();
+
+    // Создаем инвентаризацию
+    let inventory = IncomingInventoryDto {
+        document_number: Some(format!("INV-{}", now.timestamp())),
+        date_incoming: Some(date_incoming.clone()),
+        use_default_document_time: false,
+        status: Some(DocumentStatus::New),
+        account_surplus_code: Some("5.10".to_string()),
+        account_shortage_code: Some("5.09".to_string()),
+        store_id: Some(store_id.clone()),
+        store_code: store_code.clone(),
+        conception_id: None,
+        conception_code: None,
+        comment: Some("Test inventory".to_string()),
+        items: Some(IncomingInventoryItems {
+            items: vec![IncomingInventoryItemDto {
+                status: Some(InventoryItemStatus::New),
+                recalculation_number: None,
+                product_id: Some(product_id.to_string()),
+                product_article: product.num.as_ref().map(|a| a.clone()),
+                container_id: None,
+                container_code: None,
+                amount_container: Some(10.0),
+                amount_gross: None,
+                producer_id: None,
+                comment: None,
+            }],
+        }),
+    };
+
+    // Импортируем инвентаризацию
+    let result = client
+        .documents()
+        .import_incoming_inventory(inventory)
+        .await
+        .expect("Failed to import incoming inventory");
+
+    println!(
+        "Inventory import result: valid={}, warning={}",
+        result.valid, result.warning
+    );
+    println!("Document number: {}", result.document_number);
+    if let Some(other_num) = &result.other_suggested_number {
+        println!("Other suggested number: {}", other_num);
+    }
+
+    if let Some(error) = &result.error_message {
+        println!("Error message: {}", error);
+    }
+    if let Some(info) = &result.additional_info {
+        println!("Additional info: {}", info);
+    }
+    if let Some(store_info) = &result.store {
+        println!(
+            "Store: id={}, code={:?}, name={:?}",
+            store_info.id, store_info.code, store_info.name
+        );
+    }
+    if let Some(date) = &result.date {
+        println!("Date: {}", date);
+    }
+    if let Some(items) = &result.items {
+        println!("Items count: {}", items.items.len());
+        for (idx, item) in items.items.iter().take(3).enumerate() {
+            println!(
+                "Item {}: product={:?}, expected_amount={}, actual_amount={}, difference_amount={}",
+                idx + 1,
+                item.product.name,
+                item.expected_amount,
+                item.actual_amount,
+                item.difference_amount
+            );
+        }
     }
 
     cleanup_after_test(&client).await;

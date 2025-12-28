@@ -279,3 +279,5 @@ async fn test_get_history() {
     // Освобождаем слот лицензии после теста
     cleanup_after_test(&client).await;
 }
+
+

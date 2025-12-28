@@ -9,17 +9,21 @@
 //! - `inventory` - инвентаризация
 //! - `suppliers` - поставщики
 //! - `documents` - документы
+//! - `reports` - отчеты (балансы, остатки, ЕГАИС)
+//! - `entities` - справочники (типы оплат, скидок, категории и т.д.)
 //!
 pub mod assembly_charts;
 pub mod common;
 pub mod corporation;
 pub mod documents;
+pub mod entities;
 pub mod events;
 pub mod images;
 pub mod inventory;
 pub mod product_scales;
 pub mod products;
 pub mod replication;
+pub mod reports;
 pub mod suppliers;
 
 // Re-export common types
@@ -47,8 +51,12 @@ pub use suppliers::{
 // Re-export documents types
 pub use documents::{
     DistributionAlgorithmType, Document, DocumentStatus, DocumentValidationResult,
-    IncomingInvoiceDto, IncomingInvoiceItemDto, IncomingInvoiceItems, OutgoingInvoiceDto,
-    OutgoingInvoiceDtoes, OutgoingInvoiceItemDto, OutgoingInvoiceItems,
+    IdCodeNameDto, IncomingInventoryDto, IncomingInventoryItemDto, IncomingInventoryItems,
+    IncomingInventoryValidationResultDto, IncomingInventoryValidationResultItemDto,
+    IncomingInventoryValidationResultItems, IncomingInvoiceDto, IncomingInvoiceItemDto,
+    IncomingInvoiceItems, InventoryItemStatus, OutgoingInvoiceDto, OutgoingInvoiceDtoes,
+    OutgoingInvoiceItemDto, OutgoingInvoiceItems, ReturnedInvoiceDto, ReturnedInvoiceItemDto,
+    ReturnedInvoiceItems,
 };
 
 // Re-export events types
@@ -80,4 +88,29 @@ pub use product_scales::{
     ProductProductScaleRequest, ProductScaleDto, ProductScaleOperationResult,
     ProductScaleSaveRequest, ProductScaleUpdateRequest, ProductSizeDto, ProductSizeFactorDto,
     ProductSizeProductRequest, ProductSizeSaveDto,
+};
+
+// Re-export reports types
+pub use reports::{
+    BalanceCounteragent, BalanceStore, BudgetPlanItemDto, BudgetPlanItemValueType,
+    ColumnCaptions, DateDetalization, DateRangeFilter, DayDishValue, DeliveryConsolidatedReport,
+    DeliveryConsolidatedRow, DeliveryConsolidatedRows, DeliveryCourierMetric,
+    DeliveryCourierMetrics, DeliveryCouriersReport, DeliveryCouriersRow, DeliveryCouriersRows,
+    DeliveryHalfHourDetailedReport, DeliveryHalfHourDetailedRow, DeliveryHalfHourDetailedRows,
+    DeliveryHalfHourMetric, DeliveryHalfHourMetrics, DeliveryLoyaltyRegion,
+    DeliveryLoyaltyRegions, DeliveryLoyaltyReport, DeliveryLoyaltyRow, DeliveryLoyaltyRows,
+    DeliveryMetricType, DeliveryOrderCycleReport, DeliveryOrderCycleRow,
+    DeliveryOrderCycleRows, DeliveryRegionsReport, DeliveryRegionsRow, DeliveryRegionsRows,
+    DeliveryType, DocumentTypeList, EgaisBRegDto, EgaisMarkStateDto, EgaisMarksList, FilterType,
+    IngredientEntryDto, KeyValue, OlapColumnInfo, OlapColumns, OlapFieldValue, OlapFilter,
+    OlapReportRequest, OlapReportResponse, OlapReportType, OlapReportTypeV1, PeriodType,
+    RangeFilter, StoreDataDirection, StoreDocumentType, StoreFilterList,
+    StoreOperationsReportGrouping, StoreReportFilter, StoreReportItemDto, StoreReportPreset,
+    StoreTransactionType, TransactionTypeList, ValueFilter,
+};
+
+// Re-export entities types
+pub use entities::{
+    EntityType, OrderServiceType, OrderTypeEntityDto, ProductSizeEntityDto,
+    ReferenceEntity, ReferenceEntityDto, TaxCategoryEntityDto,
 };
