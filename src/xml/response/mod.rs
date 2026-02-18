@@ -8,6 +8,7 @@
 //! - `product_scales` - шкалы размеров продуктов
 //! - `inventory` - инвентаризация
 //! - `suppliers` - поставщики
+//! - `employees` - сотрудники
 //! - `documents` - документы
 //! - `reports` - отчеты (балансы, остатки, ЕГАИС)
 //! - `entities` - справочники (типы оплат, скидок, категории и т.д.)
@@ -16,6 +17,7 @@ pub mod assembly_charts;
 pub mod common;
 pub mod corporation;
 pub mod documents;
+pub mod employees;
 pub mod entities;
 pub mod events;
 pub mod images;
@@ -46,6 +48,11 @@ pub use inventory::InventoryItem;
 // Re-export suppliers types
 pub use suppliers::{
     Supplier, SupplierContainerDto, SupplierPriceList, SupplierPriceListItemDto, Suppliers,
+};
+
+// Re-export employees types
+pub use employees::{
+    Employee, Employees, KeyValueEntry, PublicExternalData,
 };
 
 // Re-export documents types

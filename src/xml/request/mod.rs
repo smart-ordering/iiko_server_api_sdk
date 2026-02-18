@@ -21,8 +21,9 @@ impl<T: Serialize> Request<T> {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename = "request")]
 pub struct InventoryRequest {
-    #[serde(rename = "storeId")]
+    #[serde(rename = "storeId", skip_serializing_if = "Option::is_none")]
     pub store_id: Option<String>,
 }
 

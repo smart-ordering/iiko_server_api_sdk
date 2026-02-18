@@ -731,7 +731,7 @@ impl<'a> ReportsEndpoint<'a> {
     /// Версия iiko: 3.9
     /// Endpoint: GET `/reports/productExpense`
     ///
-    /// # Параметры
+    /// # Параметры запроса
     /// - `department`: Подразделение (GUID)
     /// - `date_from`: Начальная дата в формате DD.MM.YYYY
     /// - `date_to`: Конечная дата в формате DD.MM.YYYY
@@ -739,7 +739,11 @@ impl<'a> ReportsEndpoint<'a> {
     /// - `hour_to`: Час окончания интервала выборки в сутках (по умолчанию -1, все время)
     ///
     /// # Что в ответе
-    /// Возвращает список элементов расхода продуктов по продажам.
+    /// Структура dayDishValue (см. XSD Расход продуктов по продажам)
+    /// - `date`: Дата
+    /// - `productId`: ID продукта
+    /// - `productName`: Название продукта
+    /// - `value`: Значение (количество) в формате decimal
     pub async fn get_product_expense(
         &self,
         department: &str,

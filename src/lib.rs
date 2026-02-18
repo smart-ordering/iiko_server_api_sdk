@@ -38,13 +38,14 @@ pub use xml::response::{
     ProductType, ProductWriteoffStrategy, ProductsOperationResult, RangeFilter, ReplicationStatus,
     ReturnedInvoiceDto, ReturnedInvoiceItemDto, ReturnedInvoiceItems, ServerType,
     StoreSpecification, Supplier, SupplierContainerDto, SupplierPriceList,
-    SupplierPriceListItemDto, Suppliers, TerminalDto, ValueFilter,
+    SupplierPriceListItemDto, Suppliers, TerminalDto, ValueFilter, Employee, Employees,
+    KeyValueEntry, PublicExternalData,
 };
 
 use endpoints::{
-    AssemblyChartsEndpoint, AuthEndpoint, CorporationEndpoint, DocumentsEndpoint, EntitiesEndpoint,
-    EventsEndpoint, ImagesEndpoint, InventoryEndpoint, ProductScalesEndpoint, ProductsEndpoint,
-    ReplicationEndpoint, ReportsEndpoint, SuppliersEndpoint,
+    AssemblyChartsEndpoint, AuthEndpoint, CorporationEndpoint, DocumentsEndpoint, EmployeesEndpoint,
+    EntitiesEndpoint, EventsEndpoint, ImagesEndpoint, InventoryEndpoint, ProductScalesEndpoint,
+    ProductsEndpoint, ReplicationEndpoint, ReportsEndpoint, SuppliersEndpoint,
 };
 
 impl IikoClient {
@@ -58,6 +59,10 @@ impl IikoClient {
 
     pub fn suppliers(&self) -> SuppliersEndpoint<'_> {
         SuppliersEndpoint::new(self)
+    }
+
+    pub fn employees(&self) -> EmployeesEndpoint<'_> {
+        EmployeesEndpoint::new(self)
     }
 
     pub fn documents(&self) -> DocumentsEndpoint<'_> {
