@@ -22,10 +22,17 @@ pub struct IikoClient {
 
 impl IikoClient {
     pub fn new(config: IikoConfig) -> Result<Self> {
-        let timeout = std::time::Duration::from_secs(config.timeout_secs);
-        let http_client = Client::builder().timeout(timeout).build().map_err(|e| {
-            IikoError::Configuration(format!("Failed to create HTTP client: {}", e))
-        })?;
+        // Если timeout_secs == 0 — не ставим таймаут на уровне HTTP-клиента (ожидаем, что таймауты обрабатывает вызывающий код)
+        let http_client = if config.timeout_secs == 0 {
+            Client::builder().build().map_err(|e| {
+                IikoError::Configuration(format!("Failed to create HTTP client: {}", e))
+            })?
+        } else {
+            let timeout = std::time::Duration::from_secs(config.timeout_secs);
+            Client::builder().timeout(timeout).build().map_err(|e| {
+                IikoError::Configuration(format!("Failed to create HTTP client: {}", e))
+            })?
+        };
 
         Ok(Self {
             config: Arc::new(config),

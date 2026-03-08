@@ -1,9 +1,10 @@
 use crate::client::IikoClient;
 use crate::error::Result;
 use crate::xml::response::reports::{
-    BudgetPlanItemDto, DayDishValue, DeliveryConsolidatedReport, DeliveryCouriersReport,
-    DeliveryHalfHourDetailedReport, DeliveryLoyaltyReport, DeliveryOrderCycleReport,
-    DeliveryRegionsReport, IngredientEntryDto, StoreReportItemDto, StoreReportPreset,
+    BudgetPlanItemDto, DayDishValue, DayDishValues, DeliveryConsolidatedReport,
+    DeliveryCouriersReport, DeliveryHalfHourDetailedReport, DeliveryLoyaltyReport,
+    DeliveryOrderCycleReport, DeliveryRegionsReport, IngredientEntryDto, StoreReportItemDto,
+    StoreReportPreset,
 };
 use crate::xml::response::{
     BalanceCounteragent, BalanceStore, EgaisMarksList, OlapColumns, OlapReportRequest,
@@ -776,15 +777,33 @@ impl<'a> ReportsEndpoint<'a> {
             .get_with_params("reports/productExpense", &params)
             .await?;
 
-        // XML может быть списком элементов или одним элементом
-        let items: Vec<DayDishValue> = match from_str::<Vec<DayDishValue>>(&response_xml) {
-            Ok(list) => list,
-            Err(_) => {
-                // Пробуем как один элемент
+        // Логируем сырой XML-ответ для отладки
+        eprintln!(
+            "iiko productExpense raw XML response: department={}, date_from={}, date_to={}, hour_from={:?}, hour_to={:?}, body={}",
+            department,
+            date_from,
+            date_to,
+            hour_from,
+            hour_to,
+            response_xml
+        );
+
+        // XML может быть:
+        // - списком элементов внутри обертки <dayDishValues>
+        // - списком элементов без обертки
+        // - одним элементом <dayDishValue>
+        let items: Vec<DayDishValue> =
+            // Пытаемся сначала распарсить обертку <dayDishValues>...</dayDishValues>
+            if let Ok(wrapper) = from_str::<DayDishValues>(&response_xml) {
+                wrapper.items
+            } else if let Ok(list) = from_str::<Vec<DayDishValue>>(&response_xml) {
+                // Падаем обратно на "голый" список элементов
+                list
+            } else {
+                // И в самом крайнем случае пробуем один элемент
                 let item: DayDishValue = from_str(&response_xml)?;
                 vec![item]
-            }
-        };
+            };
         Ok(items)
     }
 

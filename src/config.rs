@@ -14,7 +14,8 @@ impl Default for IikoConfig {
             base_url: "http://localhost:8080/resto/api".to_string(),
             login: String::new(),
             password: String::new(),
-            timeout_secs: 30,
+            // 0 означает отсутствие таймаута на уровне HTTP-клиента
+            timeout_secs: 0,
         }
     }
 }
@@ -29,7 +30,8 @@ impl IikoConfig {
             base_url: base_url.into(),
             login: login.into(),
             password: password.into(),
-            timeout_secs: 30,
+            // 0 означает отсутствие таймаута на уровне HTTP-клиента
+            timeout_secs: 0,
         }
     }
 

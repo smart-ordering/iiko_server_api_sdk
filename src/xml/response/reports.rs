@@ -1007,6 +1007,14 @@ pub struct KeyValue {
 /// Версия iiko: 3.9
 /// Endpoint: GET `/reports/productExpense`
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename = "dayDishValues")]
+pub struct DayDishValues {
+    /// Список значений расхода по продуктам
+    #[serde(rename = "dayDishValue", default)]
+    pub items: Vec<DayDishValue>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename = "dayDishValue")]
 pub struct DayDishValue {
     /// Дата
