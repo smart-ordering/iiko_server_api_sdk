@@ -32,4 +32,3 @@ pub struct ReplicationStatuses {
     #[serde(rename = "replicationStatus", default)]
     pub items: Vec<ReplicationStatus>,
 }
-

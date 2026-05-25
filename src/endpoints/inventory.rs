@@ -17,11 +17,10 @@ impl<'a> InventoryEndpoint<'a> {
     pub async fn get_inventory(&self, store_id: Option<String>) -> Result<Vec<InventoryItem>> {
         let request = InventoryRequest { store_id };
         let xml_body = to_string(&request)?;
-        
+
         let response_xml = self.client.post_xml("inventory", &xml_body).await?;
         let items: Vec<InventoryItem> = from_str(&response_xml)?;
-        
+
         Ok(items)
     }
 }
-

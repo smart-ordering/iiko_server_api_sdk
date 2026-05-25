@@ -6,10 +6,7 @@ async fn test_get_events() {
     let client = get_test_client().await;
 
     // Получаем события за сегодня
-    let result = client
-        .events()
-        .get_events(None, None, None)
-        .await;
+    let result = client.events().get_events(None, None, None).await;
 
     match result {
         Ok(events_list) => {
@@ -20,7 +17,10 @@ async fn test_get_events() {
             for event in events_list.events.iter().take(3) {
                 println!(
                     "Event: {} at {} (type: {:?})",
-                    event.id.map(|id| id.to_string()).unwrap_or_else(|| "N/A".to_string()),
+                    event
+                        .id
+                        .map(|id| id.to_string())
+                        .unwrap_or_else(|| "N/A".to_string()),
                     event.date.as_deref().unwrap_or("N/A"),
                     event.r#type
                 );
@@ -28,7 +28,10 @@ async fn test_get_events() {
         }
         Err(e) => {
             // Может быть ошибка 403 если нет прав или модуля
-            println!("Cannot get events (may need license module 2200 or permission B_VTJ): {:?}", e);
+            println!(
+                "Cannot get events (may need license module 2200 or permission B_VTJ): {:?}",
+                e
+            );
         }
     }
 
@@ -68,10 +71,7 @@ async fn test_get_events_sessions() {
     let client = get_test_client().await;
 
     // Получаем сессии за сегодня (пример)
-    let result = client
-        .events()
-        .get_sessions(None, None)
-        .await;
+    let result = client.events().get_sessions(None, None).await;
 
     match result {
         Ok(sessions) => {
@@ -93,4 +93,3 @@ async fn test_get_events_sessions() {
     // Освобождаем слот лицензии после теста
     cleanup_after_test(&client).await;
 }
-

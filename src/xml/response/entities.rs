@@ -81,7 +81,6 @@ pub struct ReferenceEntityDto {
     /// Название объекта.
     /// Для локализуемых предустановленных (например, стандартных счетов Account) — название на языке запроса.
     pub name: String,
-    
 }
 
 /// Информация о типе заказа (дополнительные поля для OrderType)
@@ -95,7 +94,10 @@ pub struct OrderTypeEntityDto {
     #[serde(rename = "orderServiceType", skip_serializing_if = "Option::is_none")]
     pub order_service_type: Option<OrderServiceType>,
     /// У каждого из режимов обслуживания может быть выбран один тип заказа по умолчанию.
-    #[serde(rename = "defaultForServiceType", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "defaultForServiceType",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_for_service_type: Option<bool>,
 }
 
@@ -164,4 +166,3 @@ impl ReferenceEntity {
         }
     }
 }
-

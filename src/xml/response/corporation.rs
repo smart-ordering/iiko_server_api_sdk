@@ -1,6 +1,6 @@
+use super::common::IdName;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use super::common::IdName;
 
 /// Типы подразделений
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -225,4 +225,3 @@ pub struct CorporationSettings {
     #[serde(rename = "vatAccounting")]
     pub vat_accounting: String,
 }
-

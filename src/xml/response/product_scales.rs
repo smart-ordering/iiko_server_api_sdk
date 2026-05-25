@@ -172,4 +172,3 @@ pub struct ProductScaleOperationResult {
     #[serde(rename = "response")]
     pub response: Option<ProductScaleDto>,
 }
-

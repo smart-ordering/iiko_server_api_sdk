@@ -270,12 +270,20 @@ pub struct OutgoingInvoiceDto {
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     /// Учетный номер документа
-    #[serde(rename = "documentNumber", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "documentNumber",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub document_number: Option<String>,
     /// Учетная дата-время документа
     /// Если не заполнено, используется дата-время сервера
     /// Формат: yyyy-MM-ddTHH:mm:ss или yyyy-MM-dd
-    #[serde(rename = "dateIncoming", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "dateIncoming",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub date_incoming: Option<String>,
     /// Использовать настройки проведения документов
     /// false (по умолчанию): использовать переданные дату-время dateIncoming как есть
@@ -287,39 +295,75 @@ pub struct OutgoingInvoiceDto {
     pub status: Option<DocumentStatus>,
     /// Счет для списания товаров (расходный счет)
     /// По умолчанию "5.01" ("Расход продуктов")
-    #[serde(rename = "accountToCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "accountToCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub account_to_code: Option<String>,
     /// Счет выручки
     /// По умолчанию "4.01" ("Торговая выручка")
-    #[serde(rename = "revenueAccountCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "revenueAccountCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub revenue_account_code: Option<String>,
     /// Склад (UUID)
     /// При создании накладных с проведением обязателен
     /// Заполняется либо в документе, либо в каждой строке отдельно, но не одновременно
-    #[serde(rename = "defaultStoreId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "defaultStoreId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_store_id: Option<String>,
     /// Склад (код)
     /// При создании накладных с проведением обязателен
     /// Заполняется либо в документе, либо в каждой строке отдельно, но не одновременно
-    #[serde(rename = "defaultStoreCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "defaultStoreCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_store_code: Option<String>,
     /// Контрагент (UUID)
-    #[serde(rename = "counteragentId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "counteragentId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub counteragent_id: Option<String>,
     /// Контрагент (код)
-    #[serde(rename = "counteragentCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "counteragentCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub counteragent_code: Option<String>,
     /// Концепция (UUID)
-    #[serde(rename = "conceptionId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "conceptionId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub conception_id: Option<String>,
     /// Концепция (код)
-    #[serde(rename = "conceptionCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "conceptionCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub conception_code: Option<String>,
     /// Комментарий
     #[serde(rename = "comment", default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
     /// UUID связанной расходной накладной (только чтение, с версии 5.4)
-    #[serde(rename = "linkedOutgoingInvoiceId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "linkedOutgoingInvoiceId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub linked_outgoing_invoice_id: Option<String>,
     /// Позиции документа
     #[serde(rename = "items", default)]
@@ -343,7 +387,11 @@ pub struct OutgoingInvoiceItemDto {
     #[serde(rename = "productId", default, skip_serializing_if = "Option::is_none")]
     pub product_id: Option<String>,
     /// Элемент номенклатуры (код/артикул)
-    #[serde(rename = "productArticle", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "productArticle",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub product_article: Option<String>,
     /// Склад (UUID)
     /// При создании накладных с проведением обязателен
@@ -356,16 +404,28 @@ pub struct OutgoingInvoiceItemDto {
     #[serde(rename = "storeCode", default, skip_serializing_if = "Option::is_none")]
     pub store_code: Option<String>,
     /// Фасовка (UUID)
-    #[serde(rename = "containerId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "containerId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub container_id: Option<String>,
     /// Фасовка (код/артикул)
-    #[serde(rename = "containerCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "containerCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub container_code: Option<String>,
     /// Цена за фасовку с учетом скидки (обязательное поле)
     #[serde(rename = "price")]
     pub price: f64,
     /// Цена без НДС за фасовку с учетом скидки (только чтение, с версии 6.2)
-    #[serde(rename = "priceWithoutVat", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "priceWithoutVat",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub price_without_vat: Option<f64>,
     /// Количество в базовых единицах измерения (обязательное поле)
     #[serde(rename = "amount")]
@@ -375,13 +435,21 @@ pub struct OutgoingInvoiceItemDto {
     #[serde(rename = "sum")]
     pub sum: f64,
     /// Сумма скидки
-    #[serde(rename = "discountSum", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "discountSum",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub discount_sum: Option<f64>,
     /// Величина процента НДС (с версии 5.0)
     /// Если не задана сумма, она вычисляется по проценту
     /// Если не задан процент, он берется из карточки товара
     /// Нельзя задать только сумму, не задавая процент
-    #[serde(rename = "vatPercent", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "vatPercent",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vat_percent: Option<f64>,
     /// Сумма НДС для строки документа (с версии 5.0)
     #[serde(rename = "vatSum", default, skip_serializing_if = "Option::is_none")]
@@ -417,12 +485,20 @@ pub struct OutgoingInvoiceDtoes {
 #[serde(rename = "document")]
 pub struct ReturnedInvoiceDto {
     /// Учетный номер документа
-    #[serde(rename = "documentNumber", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "documentNumber",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub document_number: Option<String>,
     /// Учетная дата-время документа
     /// Если не заполнено, используется дата-время сервера
     /// Формат: yyyy-MM-ddTHH:mm:ss или yyyy-MM-dd
-    #[serde(rename = "dateIncoming", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "dateIncoming",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub date_incoming: Option<String>,
     /// Использовать настройки проведения документов (с версии 5.2)
     /// false (по умолчанию): использовать переданные дату-время dateIncoming как есть
@@ -446,29 +522,57 @@ pub struct ReturnedInvoiceDto {
     pub store_cost_affected: bool,
     /// Счет для списания товаров (расходный счет)
     /// По умолчанию "5.01" ("Расход продуктов")
-    #[serde(rename = "accountToCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "accountToCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub account_to_code: Option<String>,
     /// Склад (UUID)
     /// При создании накладных с проведением обязателен
     /// Заполняется либо в документе, либо в каждой строке отдельно, но не одновременно
-    #[serde(rename = "defaultStoreId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "defaultStoreId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_store_id: Option<String>,
     /// Склад (код)
     /// При создании накладных с проведением обязателен
     /// Заполняется либо в документе, либо в каждой строке отдельно, но не одновременно
-    #[serde(rename = "defaultStoreCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "defaultStoreCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_store_code: Option<String>,
     /// Контрагент (UUID)
-    #[serde(rename = "counteragentId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "counteragentId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub counteragent_id: Option<String>,
     /// Контрагент (код)
-    #[serde(rename = "counteragentCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "counteragentCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub counteragent_code: Option<String>,
     /// Концепция (UUID)
-    #[serde(rename = "conceptionId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "conceptionId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub conception_id: Option<String>,
     /// Концепция (код)
-    #[serde(rename = "conceptionCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "conceptionCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub conception_code: Option<String>,
     /// Комментарий
     #[serde(rename = "comment", default, skip_serializing_if = "Option::is_none")]
@@ -497,16 +601,32 @@ pub struct ReturnedInvoiceItemDto {
     pub product_id: Option<String>,
     /// Элемент номенклатуры (код/артикул)
     /// Хотя бы одно из полей должно быть заполнено: productId или productArticle
-    #[serde(rename = "productArticle", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "productArticle",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub product_article: Option<String>,
     /// Товар поставщика (UUID) (с версии 5.0.2)
-    #[serde(rename = "supplierProduct", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "supplierProduct",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub supplier_product: Option<String>,
     /// Товар поставщика (код/артикул) (с версии 5.0.2)
-    #[serde(rename = "supplierProductArticle", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "supplierProductArticle",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub supplier_product_article: Option<String>,
     /// Номер государственной таможенной декларации (с версии 7.6)
-    #[serde(rename = "customsDeclarationNumber", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "customsDeclarationNumber",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub customs_declaration_number: Option<String>,
     /// Склад (UUID)
     /// При создании накладных с проведением обязателен
@@ -519,10 +639,18 @@ pub struct ReturnedInvoiceItemDto {
     #[serde(rename = "storeCode", default, skip_serializing_if = "Option::is_none")]
     pub store_code: Option<String>,
     /// Фасовка (UUID)
-    #[serde(rename = "containerId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "containerId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub container_id: Option<String>,
     /// Фасовка (код/артикул)
-    #[serde(rename = "containerCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "containerCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub container_code: Option<String>,
     /// Цена с НДС за фасовку без учета скидки (обязательное поле)
     #[serde(rename = "price")]
@@ -535,13 +663,21 @@ pub struct ReturnedInvoiceItemDto {
     #[serde(rename = "sum")]
     pub sum: f64,
     /// Сумма скидки
-    #[serde(rename = "discountSum", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "discountSum",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub discount_sum: Option<f64>,
     /// Величина процента НДС (с версии 5.0)
     /// Если не задана сумма, она вычисляется по проценту
     /// Если не задан процент, он берется из карточки товара
     /// Нельзя задать только сумму, не задавая процент
-    #[serde(rename = "vatPercent", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "vatPercent",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vat_percent: Option<f64>,
     /// Сумма НДС для строки документа (с версии 5.0)
     #[serde(rename = "vatSum", default, skip_serializing_if = "Option::is_none")]
@@ -580,12 +716,20 @@ pub enum InventoryItemStatus {
 #[serde(rename = "document")]
 pub struct IncomingInventoryDto {
     /// Учетный номер документа
-    #[serde(rename = "documentNumber", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "documentNumber",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub document_number: Option<String>,
     /// Учетная дата-время документа
     /// Если не заполнено, используется дата-время сервера
     /// Формат: yyyy-MM-ddTHH:mm:ss или yyyy-MM-dd
-    #[serde(rename = "dateIncoming", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "dateIncoming",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub date_incoming: Option<String>,
     /// Использовать настройки проведения документов
     /// false (по умолчанию): использовать переданные дату-время dateIncoming как есть
@@ -597,11 +741,19 @@ pub struct IncomingInventoryDto {
     pub status: Option<DocumentStatus>,
     /// Счет, на который записываются излишки
     /// По умолчанию "5.10" ("Излишки инвентаризации")
-    #[serde(rename = "accountSurplusCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "accountSurplusCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub account_surplus_code: Option<String>,
     /// Счет, на который записывается недостача
     /// По умолчанию "5.09" ("Недостача инвентаризации")
-    #[serde(rename = "accountShortageCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "accountShortageCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub account_shortage_code: Option<String>,
     /// Склад (UUID)
     /// Обязателен для заполнения
@@ -612,10 +764,18 @@ pub struct IncomingInventoryDto {
     #[serde(rename = "storeCode", default, skip_serializing_if = "Option::is_none")]
     pub store_code: Option<String>,
     /// Концепция (UUID)
-    #[serde(rename = "conceptionId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "conceptionId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub conception_id: Option<String>,
     /// Концепция (код)
-    #[serde(rename = "conceptionCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "conceptionCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub conception_code: Option<String>,
     /// Комментарий к документу
     #[serde(rename = "comment", default, skip_serializing_if = "Option::is_none")]
@@ -644,30 +804,58 @@ pub struct IncomingInventoryItemDto {
     pub status: Option<InventoryItemStatus>,
     /// Порядковый номер пересчета остатков по элементу номенклатуры
     /// Нумерация с нуля. При импорте игнорируется
-    #[serde(rename = "recalculationNumber", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "recalculationNumber",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub recalculation_number: Option<i32>,
     /// Элемент номенклатуры (UUID)
     #[serde(rename = "productId", default, skip_serializing_if = "Option::is_none")]
     pub product_id: Option<String>,
     /// Элемент номенклатуры (код/артикул)
-    #[serde(rename = "productArticle", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "productArticle",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub product_article: Option<String>,
     /// Фасовка (UUID)
-    #[serde(rename = "containerId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "containerId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub container_id: Option<String>,
     /// Фасовка (код/артикул)
-    #[serde(rename = "containerCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "containerCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub container_code: Option<String>,
     /// Количество в фасовках (containerId/containerCode)
-    #[serde(rename = "amountContainer", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "amountContainer",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub amount_container: Option<f64>,
     /// Вес с тарой
     /// Информационное поле, используется только для отображения в бекофисе
-    #[serde(rename = "amountGross", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "amountGross",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub amount_gross: Option<f64>,
     /// Производитель или импортер товара (UUID)
     /// Используется в российской алкогольной декларации
-    #[serde(rename = "producerId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "producerId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub producer_id: Option<String>,
     /// Произвольный комментарий к строке документа
     #[serde(rename = "comment", default, skip_serializing_if = "Option::is_none")]
@@ -708,15 +896,27 @@ pub struct IncomingInventoryValidationResultDto {
     #[serde(rename = "documentNumber")]
     pub document_number: String,
     /// Предлагаемый номер документа при ошибке валидации номера
-    #[serde(rename = "otherSuggestedNumber", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "otherSuggestedNumber",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub other_suggested_number: Option<String>,
     /// Текст ошибки (или только заголовок, если задано additionalInfo)
     /// Предназначен для показа пользователю, но не всегда локализован
-    #[serde(rename = "errorMessage", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "errorMessage",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub error_message: Option<String>,
     /// Текст ошибки (подробное описание)
     /// Как правило, отсутствует
-    #[serde(rename = "additionalInfo", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "additionalInfo",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub additional_info: Option<String>,
     /// Склад
     #[serde(rename = "store", default, skip_serializing_if = "Option::is_none")]

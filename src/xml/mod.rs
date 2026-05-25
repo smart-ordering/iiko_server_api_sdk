@@ -10,4 +10,3 @@ pub use response::{
     GroupDto, GroupDtoes, GroupsList, IdName, InventoryItem, ReplicationStatus,
     ReplicationStatuses, Response, ServerType, Supplier, TerminalDto, TerminalDtoes,
 };
-

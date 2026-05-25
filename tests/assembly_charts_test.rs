@@ -145,7 +145,10 @@ async fn test_get_assembled() {
                         chart.date_to
                     );
                 } else {
-                    println!("No assembly chart found for product {}", product_id.to_string());
+                    println!(
+                        "No assembly chart found for product {}",
+                        product_id.to_string()
+                    );
                 }
             }
         }
@@ -204,7 +207,10 @@ async fn test_get_prepared() {
                         chart.items.len()
                     );
                 } else {
-                    println!("No prepared chart found for product {}", product_id.to_string());
+                    println!(
+                        "No prepared chart found for product {}",
+                        product_id.to_string()
+                    );
                 }
             }
         }
@@ -246,10 +252,7 @@ async fn test_get_history() {
         }
     };
 
-    let result = client
-        .assembly_charts()
-        .get_history(product_id, None)
-        .await;
+    let result = client.assembly_charts().get_history(product_id, None).await;
 
     match result {
         Ok(history) => {
@@ -279,5 +282,3 @@ async fn test_get_history() {
     // Освобождаем слот лицензии после теста
     cleanup_after_test(&client).await;
 }
-
-

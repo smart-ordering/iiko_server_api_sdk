@@ -12,4 +12,3 @@ pub struct InventoryItem {
     #[serde(rename = "unit")]
     pub unit: String,
 }
-

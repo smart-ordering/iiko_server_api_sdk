@@ -46,4 +46,3 @@ pub enum IikoError {
 }
 
 pub type Result<T> = std::result::Result<T, IikoError>;
-

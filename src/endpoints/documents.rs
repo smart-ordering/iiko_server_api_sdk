@@ -28,10 +28,10 @@ impl<'a> DocumentsEndpoint<'a> {
             date_to,
         });
         let xml_body = request.to_xml()?;
-        
+
         let response_xml = self.client.post_xml("documents", &xml_body).await?;
         let documents: Vec<Document> = from_str(&response_xml)?;
-        
+
         Ok(documents)
     }
 
@@ -61,7 +61,7 @@ impl<'a> DocumentsEndpoint<'a> {
     ) -> Result<DocumentValidationResult> {
         // Сериализуем документ в XML
         let xml_body = to_string(&invoice)?;
-        
+
         let response_xml = self
             .client
             .post_xml("documents/import/incomingInvoice", &xml_body)
@@ -98,7 +98,7 @@ impl<'a> DocumentsEndpoint<'a> {
     ) -> Result<DocumentValidationResult> {
         // Сериализуем документ в XML
         let xml_body = to_string(&invoice)?;
-        
+
         let response_xml = self
             .client
             .post_xml("documents/import/outgoingInvoice", &xml_body)
@@ -136,7 +136,7 @@ impl<'a> DocumentsEndpoint<'a> {
     ) -> Result<DocumentValidationResult> {
         // Сериализуем документ в XML
         let xml_body = to_string(&invoice)?;
-        
+
         let response_xml = self
             .client
             .post_xml("documents/import/returnedInvoice", &xml_body)
@@ -171,7 +171,7 @@ impl<'a> DocumentsEndpoint<'a> {
     ) -> Result<IncomingInventoryValidationResultDto> {
         // Сериализуем документ в XML
         let xml_body = to_string(&inventory)?;
-        
+
         let response_xml = self
             .client
             .post_xml("documents/import/incomingInventory", &xml_body)
@@ -202,7 +202,7 @@ impl<'a> DocumentsEndpoint<'a> {
     ) -> Result<DocumentValidationResult> {
         // Сериализуем документ в XML
         let xml_body = to_string(&invoice)?;
-        
+
         let response_xml = self
             .client
             .post_xml("documents/unprocess/incomingInvoice", &xml_body)
@@ -233,7 +233,7 @@ impl<'a> DocumentsEndpoint<'a> {
     ) -> Result<DocumentValidationResult> {
         // Сериализуем документ в XML
         let xml_body = to_string(&invoice)?;
-        
+
         let response_xml = self
             .client
             .post_xml("documents/unprocess/outgoingInvoice", &xml_body)
@@ -343,4 +343,3 @@ impl<'a> DocumentsEndpoint<'a> {
         Ok(result.documents)
     }
 }
-

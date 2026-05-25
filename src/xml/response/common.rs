@@ -16,4 +16,3 @@ pub struct IdName {
     #[serde(rename = "name")]
     pub name: String,
 }
-

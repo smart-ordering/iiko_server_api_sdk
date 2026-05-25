@@ -120,4 +120,3 @@ pub struct CashSessionsList {
     #[serde(rename = "session", default)]
     pub sessions: Vec<CashSession>,
 }
-

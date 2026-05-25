@@ -125,6 +125,7 @@ pub struct Suppliers {
 /// # Согласно документации iiko API v3.9+:
 /// Структура соответствует XSD Прайс-лист
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename = "supplierPriceListItemDto")]
 pub struct SupplierPriceListItemDto {
     /// Товар у нас (UUID)
     #[serde(rename = "nativeProduct", default)]
@@ -209,4 +210,3 @@ pub struct SupplierPriceList {
     #[serde(rename = "supplierPriceListItemDto", default)]
     pub items: Vec<SupplierPriceListItemDto>,
 }
-

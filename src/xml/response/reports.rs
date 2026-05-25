@@ -1117,4 +1117,3 @@ pub struct IngredientEntryDto {
     #[serde(rename = "unit", default)]
     pub unit: Option<String>,
 }
-

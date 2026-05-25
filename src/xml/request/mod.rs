@@ -42,4 +42,3 @@ pub struct DocumentsRequest {
     #[serde(rename = "dateTo")]
     pub date_to: Option<String>,
 }
-

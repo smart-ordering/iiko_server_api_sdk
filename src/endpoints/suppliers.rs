@@ -2,6 +2,7 @@ use crate::client::IikoClient;
 use crate::error::Result;
 use crate::xml::response::suppliers::{Supplier, SupplierPriceListItemDto, Suppliers};
 use quick_xml::de::from_str;
+use serde::Deserialize;
 
 pub struct SuppliersEndpoint<'a> {
     client: &'a IikoClient,
@@ -184,12 +185,9 @@ impl<'a> SuppliersEndpoint<'a> {
         code: &str,
         date: Option<&str>,
     ) -> Result<Vec<SupplierPriceListItemDto>> {
-        let mut param_strings = Vec::new();
         let mut params = Vec::new();
-
-        if let Some(d) = date {
-            param_strings.push(d.to_string());
-            params.push(("date", param_strings.last().unwrap().as_str()));
+        if let Some(date) = date {
+            params.push(("date", date));
         }
 
         let endpoint = format!("suppliers/{}/pricelist", code);
@@ -199,26 +197,102 @@ impl<'a> SuppliersEndpoint<'a> {
             self.client.get_with_params(&endpoint, &params).await?
         };
 
-        // Парсим XML ответ
-        // XML формат может быть:
-        // 1. <supplierPriceList><supplierPriceListItemDto>...</supplierPriceListItemDto></supplierPriceList>
-        // 2. Просто список элементов без обертки
-        // 3. Один элемент
-        use crate::xml::response::suppliers::SupplierPriceList;
-        let pricelist: Vec<SupplierPriceListItemDto> = match from_str::<SupplierPriceList>(&response_xml) {
-            Ok(wrapper) => wrapper.items,
-            Err(_) => {
-                // Пробуем как список элементов без обертки
-                match from_str::<Vec<SupplierPriceListItemDto>>(&response_xml) {
-                    Ok(list) => list,
-                    Err(_) => {
-                        // Если не список, пробуем как один элемент
-                        let item: SupplierPriceListItemDto = from_str(&response_xml)?;
-                        vec![item]
-                    }
-                }
-            }
-        };
-        Ok(pricelist)
+        parse_supplier_pricelist_response(&response_xml)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct SupplierPriceListEnvelope {
+    #[serde(rename = "supplierPriceListItemDto", default)]
+    items: Vec<SupplierPriceListItemDto>,
+}
+
+fn parse_supplier_pricelist_response(xml: &str) -> Result<Vec<SupplierPriceListItemDto>> {
+    // iiko встречается как с wrapper-элементом, так и с одиночным supplierPriceListItemDto.
+    let has_supplier_pricelist_wrapper = xml.contains("<supplierPriceList>")
+        || xml.contains("<supplierPriceList ")
+        || xml.contains("</supplierPriceList>");
+
+    if let Ok(wrapper) = from_str::<SupplierPriceListEnvelope>(xml) {
+        if has_supplier_pricelist_wrapper || !wrapper.items.is_empty() {
+            return Ok(wrapper.items);
+        }
+    }
+
+    let item: SupplierPriceListItemDto = from_str(xml)?;
+    Ok(vec![item])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_supplier_pricelist_response;
+
+    #[test]
+    fn parses_supplier_pricelist_with_wrapper() {
+        let xml = r#"
+            <supplierPriceList>
+                <supplierPriceListItemDto>
+                    <nativeProduct>550e8400-e29b-41d4-a716-446655440000</nativeProduct>
+                    <nativeProductCode>N-001</nativeProductCode>
+                    <nativeProductName>Tomatoes</nativeProductName>
+                    <supplierProduct>550e8400-e29b-41d4-a716-446655440001</supplierProduct>
+                    <supplierProductCode>S-001</supplierProductCode>
+                    <supplierProductName>Tomatoes Premium</supplierProductName>
+                    <costPrice>120.50</costPrice>
+                    <allowablePriceDeviation>5.0</allowablePriceDeviation>
+                    <container>
+                        <id>550e8400-e29b-41d4-a716-446655440002</id>
+                        <name>Box</name>
+                        <count>10</count>
+                        <backwardRecalculation>true</backwardRecalculation>
+                        <deleted>false</deleted>
+                        <useInFront>true</useInFront>
+                    </container>
+                </supplierPriceListItemDto>
+                <supplierPriceListItemDto>
+                    <nativeProductCode>N-002</nativeProductCode>
+                    <supplierProductCode>S-002</supplierProductCode>
+                    <supplierProductName>Cucumbers</supplierProductName>
+                    <costPrice>95.00</costPrice>
+                </supplierPriceListItemDto>
+            </supplierPriceList>
+        "#;
+
+        let items = parse_supplier_pricelist_response(xml).expect("wrapper XML should parse");
+
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0].native_product_code.as_deref(), Some("N-001"));
+        assert_eq!(
+            items[0].container.as_ref().and_then(|c| c.name.as_deref()),
+            Some("Box")
+        );
+        assert_eq!(items[1].supplier_product_name.as_deref(), Some("Cucumbers"));
+    }
+
+    #[test]
+    fn parses_single_supplier_pricelist_item() {
+        let xml = r#"
+            <supplierPriceListItemDto>
+                <nativeProductCode>N-003</nativeProductCode>
+                <supplierProductCode>S-003</supplierProductCode>
+                <supplierProductName>Cheese</supplierProductName>
+                <costPrice>450.75</costPrice>
+            </supplierPriceListItemDto>
+        "#;
+
+        let items = parse_supplier_pricelist_response(xml).expect("single item XML should parse");
+
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].native_product_code.as_deref(), Some("N-003"));
+        assert_eq!(items[0].cost_price, Some(450.75));
+    }
+
+    #[test]
+    fn parses_empty_supplier_pricelist_wrapper() {
+        let xml = r#"<supplierPriceList></supplierPriceList>"#;
+
+        let items = parse_supplier_pricelist_response(xml).expect("empty wrapper XML should parse");
+
+        assert!(items.is_empty());
     }
 }

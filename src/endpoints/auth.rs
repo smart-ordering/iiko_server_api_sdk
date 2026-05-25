@@ -22,4 +22,3 @@ impl<'a> AuthEndpoint<'a> {
         self.client.invalidate_session().await;
     }
 }
-

@@ -1,8 +1,6 @@
 use crate::client::IikoClient;
 use crate::error::Result;
-use crate::xml::response::{
-    EntityType, ReferenceEntity, ReferenceEntityDto,
-};
+use crate::xml::response::{EntityType, ReferenceEntity, ReferenceEntityDto};
 use serde_json;
 use uuid::Uuid;
 
@@ -155,4 +153,3 @@ impl<'a> EntitiesEndpoint<'a> {
         Ok(ids)
     }
 }
-

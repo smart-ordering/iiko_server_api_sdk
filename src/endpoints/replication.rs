@@ -15,10 +15,7 @@ impl<'a> ReplicationEndpoint<'a> {
     }
 
     pub async fn get_statuses(&self) -> Result<Vec<ReplicationStatus>> {
-        let response_xml = self
-            .client
-            .get("replication/statuses")
-            .await?;
+        let response_xml = self.client.get("replication/statuses").await?;
 
         let wrapper: crate::xml::response::ReplicationStatuses = from_str(&response_xml)?;
         Ok(wrapper.items)
@@ -34,7 +31,7 @@ impl<'a> ReplicationEndpoint<'a> {
 
     pub async fn get_server_type(&self) -> Result<ServerType> {
         let response_xml = self.client.get("replication/serverType").await?;
-        
+
         // Response is XML: <serverType>CHAIN</serverType>
         #[derive(Debug, Deserialize)]
         #[serde(rename = "serverType")]
@@ -42,10 +39,10 @@ impl<'a> ReplicationEndpoint<'a> {
             #[serde(rename = "$text")]
             value: String,
         }
-        
+
         let wrapper: ServerTypeWrapper = from_str(&response_xml)?;
         let server_type_str = wrapper.value.trim();
-        
+
         match server_type_str {
             "CHAIN" => Ok(ServerType::Chain),
             "REPLICATED_RMS" => Ok(ServerType::ReplicatedRms),
@@ -57,4 +54,3 @@ impl<'a> ReplicationEndpoint<'a> {
         }
     }
 }
-

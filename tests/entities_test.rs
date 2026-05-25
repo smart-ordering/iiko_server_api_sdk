@@ -41,11 +41,7 @@ async fn test_entities_list_tax_category() {
     let entities = client.entities();
 
     let result = entities
-        .list(
-            &[iiko_server_api_sdk::EntityType::TaxCategory],
-            None,
-            None,
-        )
+        .list(&[iiko_server_api_sdk::EntityType::TaxCategory], None, None)
         .await;
 
     match result {
@@ -84,7 +80,10 @@ async fn test_entities_list_with_extended_fields() {
 
     match result {
         Ok(entities_list) => {
-            println!("Получено сущностей с расширенными полями: {}", entities_list.len());
+            println!(
+                "Получено сущностей с расширенными полями: {}",
+                entities_list.len()
+            );
             for entity in entities_list.iter().take(5) {
                 let base = entity.base();
                 println!(
@@ -120,11 +119,7 @@ async fn test_entities_get_ids_account() {
     let entities = client.entities();
 
     let result = entities
-        .get_ids(
-            iiko_server_api_sdk::EntityType::Account,
-            Some(false),
-            None,
-        )
+        .get_ids(iiko_server_api_sdk::EntityType::Account, Some(false), None)
         .await;
 
     match result {
@@ -148,11 +143,7 @@ async fn test_entities_get_ids_payment_type() {
     let entities = client.entities();
 
     let result = entities
-        .get_ids(
-            iiko_server_api_sdk::EntityType::PaymentType,
-            None,
-            None,
-        )
+        .get_ids(iiko_server_api_sdk::EntityType::PaymentType, None, None)
         .await;
 
     match result {
@@ -194,4 +185,3 @@ async fn test_entities_list_with_revision() {
 
     cleanup_after_test(&client).await;
 }
-

@@ -51,14 +51,12 @@ pub use suppliers::{
 };
 
 // Re-export employees types
-pub use employees::{
-    Employee, Employees, KeyValueEntry, PublicExternalData,
-};
+pub use employees::{Employee, Employees, KeyValueEntry, PublicExternalData};
 
 // Re-export documents types
 pub use documents::{
-    DistributionAlgorithmType, Document, DocumentStatus, DocumentValidationResult,
-    IdCodeNameDto, IncomingInventoryDto, IncomingInventoryItemDto, IncomingInventoryItems,
+    DistributionAlgorithmType, Document, DocumentStatus, DocumentValidationResult, IdCodeNameDto,
+    IncomingInventoryDto, IncomingInventoryItemDto, IncomingInventoryItems,
     IncomingInventoryValidationResultDto, IncomingInventoryValidationResultItemDto,
     IncomingInventoryValidationResultItems, IncomingInvoiceDto, IncomingInvoiceItemDto,
     IncomingInvoiceItems, InventoryItemStatus, OutgoingInvoiceDto, OutgoingInvoiceDtoes,
@@ -99,25 +97,24 @@ pub use product_scales::{
 
 // Re-export reports types
 pub use reports::{
-    BalanceCounteragent, BalanceStore, BudgetPlanItemDto, BudgetPlanItemValueType,
-    ColumnCaptions, DateDetalization, DateRangeFilter, DayDishValue, DeliveryConsolidatedReport,
+    BalanceCounteragent, BalanceStore, BudgetPlanItemDto, BudgetPlanItemValueType, ColumnCaptions,
+    DateDetalization, DateRangeFilter, DayDishValue, DeliveryConsolidatedReport,
     DeliveryConsolidatedRow, DeliveryConsolidatedRows, DeliveryCourierMetric,
     DeliveryCourierMetrics, DeliveryCouriersReport, DeliveryCouriersRow, DeliveryCouriersRows,
     DeliveryHalfHourDetailedReport, DeliveryHalfHourDetailedRow, DeliveryHalfHourDetailedRows,
-    DeliveryHalfHourMetric, DeliveryHalfHourMetrics, DeliveryLoyaltyRegion,
-    DeliveryLoyaltyRegions, DeliveryLoyaltyReport, DeliveryLoyaltyRow, DeliveryLoyaltyRows,
-    DeliveryMetricType, DeliveryOrderCycleReport, DeliveryOrderCycleRow,
-    DeliveryOrderCycleRows, DeliveryRegionsReport, DeliveryRegionsRow, DeliveryRegionsRows,
-    DeliveryType, DocumentTypeList, EgaisBRegDto, EgaisMarkStateDto, EgaisMarksList, FilterType,
-    IngredientEntryDto, KeyValue, OlapColumnInfo, OlapColumns, OlapFieldValue, OlapFilter,
-    OlapReportRequest, OlapReportResponse, OlapReportType, OlapReportTypeV1, PeriodType,
-    RangeFilter, StoreDataDirection, StoreDocumentType, StoreFilterList,
-    StoreOperationsReportGrouping, StoreReportFilter, StoreReportItemDto, StoreReportPreset,
-    StoreTransactionType, TransactionTypeList, ValueFilter,
+    DeliveryHalfHourMetric, DeliveryHalfHourMetrics, DeliveryLoyaltyRegion, DeliveryLoyaltyRegions,
+    DeliveryLoyaltyReport, DeliveryLoyaltyRow, DeliveryLoyaltyRows, DeliveryMetricType,
+    DeliveryOrderCycleReport, DeliveryOrderCycleRow, DeliveryOrderCycleRows, DeliveryRegionsReport,
+    DeliveryRegionsRow, DeliveryRegionsRows, DeliveryType, DocumentTypeList, EgaisBRegDto,
+    EgaisMarkStateDto, EgaisMarksList, FilterType, IngredientEntryDto, KeyValue, OlapColumnInfo,
+    OlapColumns, OlapFieldValue, OlapFilter, OlapReportRequest, OlapReportResponse, OlapReportType,
+    OlapReportTypeV1, PeriodType, RangeFilter, StoreDataDirection, StoreDocumentType,
+    StoreFilterList, StoreOperationsReportGrouping, StoreReportFilter, StoreReportItemDto,
+    StoreReportPreset, StoreTransactionType, TransactionTypeList, ValueFilter,
 };
 
 // Re-export entities types
 pub use entities::{
-    EntityType, OrderServiceType, OrderTypeEntityDto, ProductSizeEntityDto,
-    ReferenceEntity, ReferenceEntityDto, TaxCategoryEntityDto,
+    EntityType, OrderServiceType, OrderTypeEntityDto, ProductSizeEntityDto, ReferenceEntity,
+    ReferenceEntityDto, TaxCategoryEntityDto,
 };

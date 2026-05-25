@@ -172,10 +172,7 @@ impl<'a> ReportsEndpoint<'a> {
     /// # Что в ответе
     /// Возвращает JSON структуру списка полей с информацией по возможностям фильтрации, агрегации и группировки.
     /// Устаревшие поля (deprecated) не выводятся.
-    pub async fn get_olap_columns(
-        &self,
-        report_type: OlapReportType,
-    ) -> Result<OlapColumns> {
+    pub async fn get_olap_columns(&self, report_type: OlapReportType) -> Result<OlapColumns> {
         let report_type_str = match report_type {
             OlapReportType::Sales => "SALES",
             OlapReportType::Transactions => "TRANSACTIONS",
@@ -184,7 +181,10 @@ impl<'a> ReportsEndpoint<'a> {
 
         let response_json = self
             .client
-            .get_with_params("v2/reports/olap/columns", &[("reportType", report_type_str)])
+            .get_with_params(
+                "v2/reports/olap/columns",
+                &[("reportType", report_type_str)],
+            )
             .await?;
 
         let columns: OlapColumns = serde_json::from_str(&response_json)?;
@@ -206,10 +206,7 @@ impl<'a> ReportsEndpoint<'a> {
     /// - Рекомендуется использовать не более 7 полей
     /// - Используйте `build_summary=false` если не нужны общие результаты
     /// - Начиная с версии 5.5, каждый OLAP-запрос должен содержать фильтр по дате
-    pub async fn get_olap_report(
-        &self,
-        request: OlapReportRequest,
-    ) -> Result<OlapReportResponse> {
+    pub async fn get_olap_report(&self, request: OlapReportRequest) -> Result<OlapReportResponse> {
         let json_body = serde_json::to_string(&request)?;
 
         let response_json = self
@@ -274,11 +271,7 @@ impl<'a> ReportsEndpoint<'a> {
         group_col: Option<&[&str]>,
         agr: Option<&[&str]>,
     ) -> Result<OlapReportResponse> {
-        let mut params = vec![
-            ("report", report.as_str()),
-            ("from", from),
-            ("to", to),
-        ];
+        let mut params = vec![("report", report.as_str()), ("from", from), ("to", to)];
 
         if let Some(sum) = summary {
             params.push(("summary", if sum { "true" } else { "false" }));
@@ -302,10 +295,7 @@ impl<'a> ReportsEndpoint<'a> {
             }
         }
 
-        let response_json = self
-            .client
-            .get_with_params("reports/olap", &params)
-            .await?;
+        let response_json = self.client.get_with_params("reports/olap", &params).await?;
 
         let report: OlapReportResponse = serde_json::from_str(&response_json)?;
         Ok(report)
@@ -691,14 +681,15 @@ impl<'a> ReportsEndpoint<'a> {
             .await?;
 
         // XML может быть списком элементов или одним элементом
-        let items: Vec<StoreReportItemDto> = match from_str::<Vec<StoreReportItemDto>>(&response_xml) {
-            Ok(list) => list,
-            Err(_) => {
-                // Пробуем как один элемент
-                let item: StoreReportItemDto = from_str(&response_xml)?;
-                vec![item]
-            }
-        };
+        let items: Vec<StoreReportItemDto> =
+            match from_str::<Vec<StoreReportItemDto>>(&response_xml) {
+                Ok(list) => list,
+                Err(_) => {
+                    // Пробуем как один элемент
+                    let item: StoreReportItemDto = from_str(&response_xml)?;
+                    vec![item]
+                }
+            };
         Ok(items)
     }
 
@@ -710,20 +701,18 @@ impl<'a> ReportsEndpoint<'a> {
     /// # Что в ответе
     /// Возвращает список пресетов отчетов по складским операциям.
     pub async fn get_store_report_presets(&self) -> Result<Vec<StoreReportPreset>> {
-        let response_xml = self
-            .client
-            .get("reports/storeReportPresets")
-            .await?;
+        let response_xml = self.client.get("reports/storeReportPresets").await?;
 
         // XML может быть списком элементов или одним элементом
-        let presets: Vec<StoreReportPreset> = match from_str::<Vec<StoreReportPreset>>(&response_xml) {
-            Ok(list) => list,
-            Err(_) => {
-                // Пробуем как один элемент
-                let preset: StoreReportPreset = from_str(&response_xml)?;
-                vec![preset]
-            }
-        };
+        let presets: Vec<StoreReportPreset> =
+            match from_str::<Vec<StoreReportPreset>>(&response_xml) {
+                Ok(list) => list,
+                Err(_) => {
+                    // Пробуем как один элемент
+                    let preset: StoreReportPreset = from_str(&response_xml)?;
+                    vec![preset]
+                }
+            };
         Ok(presets)
     }
 
@@ -780,12 +769,7 @@ impl<'a> ReportsEndpoint<'a> {
         // Логируем сырой XML-ответ для отладки
         eprintln!(
             "iiko productExpense raw XML response: department={}, date_from={}, date_to={}, hour_from={:?}, hour_to={:?}, body={}",
-            department,
-            date_from,
-            date_to,
-            hour_from,
-            hour_to,
-            response_xml
+            department, date_from, date_to, hour_from, hour_to, response_xml
         );
 
         // XML может быть:
@@ -907,7 +891,8 @@ impl<'a> ReportsEndpoint<'a> {
             .await?;
 
         // XML может быть списком элементов или одним элементом
-        let items: Vec<BudgetPlanItemDto> = match from_str::<Vec<BudgetPlanItemDto>>(&response_xml) {
+        let items: Vec<BudgetPlanItemDto> = match from_str::<Vec<BudgetPlanItemDto>>(&response_xml)
+        {
             Ok(list) => list,
             Err(_) => {
                 // Пробуем как один элемент
@@ -960,15 +945,15 @@ impl<'a> ReportsEndpoint<'a> {
             .await?;
 
         // XML может быть списком элементов или одним элементом
-        let items: Vec<IngredientEntryDto> = match from_str::<Vec<IngredientEntryDto>>(&response_xml) {
-            Ok(list) => list,
-            Err(_) => {
-                // Пробуем как один элемент
-                let item: IngredientEntryDto = from_str(&response_xml)?;
-                vec![item]
-            }
-        };
+        let items: Vec<IngredientEntryDto> =
+            match from_str::<Vec<IngredientEntryDto>>(&response_xml) {
+                Ok(list) => list,
+                Err(_) => {
+                    // Пробуем как один элемент
+                    let item: IngredientEntryDto = from_str(&response_xml)?;
+                    vec![item]
+                }
+            };
         Ok(items)
     }
 }
-
