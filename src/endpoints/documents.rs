@@ -3,9 +3,12 @@ use crate::error::Result;
 use crate::xml::request::{DocumentsRequest, Request};
 use crate::xml::response::{
     Document, DocumentValidationResult, IncomingInventoryDto, IncomingInventoryValidationResultDto,
-    IncomingInvoiceDto, OutgoingInvoiceDto, OutgoingInvoiceDtoes, ReturnedInvoiceDto,
+    IncomingInvoiceDto, InternalTransferDto, InternalTransferListResult,
+    InternalTransferOperationResult, OutgoingInvoiceDto, OutgoingInvoiceDtoes, ReturnedInvoiceDto,
 };
 use quick_xml::{de::from_str, se::to_string};
+use serde_json::to_string as json_to_string;
+use uuid::Uuid;
 
 pub struct DocumentsEndpoint<'a> {
     client: &'a IikoClient,
@@ -33,6 +36,103 @@ impl<'a> DocumentsEndpoint<'a> {
         let documents: Vec<Document> = from_str(&response_xml)?;
 
         Ok(documents)
+    }
+
+    /// Получить список внутренних перемещений.
+    ///
+    /// # Версия iiko: 7.9.3+
+    /// # Endpoint: GET `/v2/documents/internalTransfer`
+    ///
+    /// # Параметры:
+    /// - `date_from`: начало интервала в формате `yyyy-MM-dd`, обязательный
+    /// - `date_to`: конец интервала в формате `yyyy-MM-dd`, обязательный
+    /// - `status`: опциональный статус документа (`NEW`, `PROCESSED`, `DELETED`)
+    /// - `revision_from`: опциональная ревизия для инкрементальной выгрузки, по умолчанию iiko использует `-1`
+    pub async fn list_internal_transfers(
+        &self,
+        date_from: impl AsRef<str>,
+        date_to: impl AsRef<str>,
+        status: Option<crate::xml::response::DocumentStatus>,
+        revision_from: Option<i64>,
+    ) -> Result<InternalTransferListResult> {
+        let mut owned_params: Vec<(&str, String)> = vec![
+            ("dateFrom", date_from.as_ref().to_string()),
+            ("dateTo", date_to.as_ref().to_string()),
+        ];
+
+        if let Some(status) = status {
+            owned_params.push(("status", status.as_api_str().to_string()));
+        }
+
+        if let Some(revision_from) = revision_from {
+            owned_params.push(("revisionFrom", revision_from.to_string()));
+        }
+
+        let params: Vec<(&str, &str)> = owned_params
+            .iter()
+            .map(|(key, value)| (*key, value.as_str()))
+            .collect();
+
+        let response_json = self
+            .client
+            .get_with_params("v2/documents/internalTransfer", &params)
+            .await?;
+
+        let result: InternalTransferListResult = serde_json::from_str(&response_json)?;
+        Ok(result)
+    }
+
+    /// Получить внутреннее перемещение по UUID документа.
+    ///
+    /// # Endpoint: GET `/v2/documents/internalTransfer/byId`
+    pub async fn get_internal_transfer_by_id(&self, id: Uuid) -> Result<InternalTransferDto> {
+        let id = id.to_string();
+        let response_json = self
+            .client
+            .get_with_params("v2/documents/internalTransfer/byId", &[("id", id.as_str())])
+            .await?;
+
+        let transfer: InternalTransferDto = serde_json::from_str(&response_json)?;
+        Ok(transfer)
+    }
+
+    /// Получить внутренние перемещения по номеру документа.
+    ///
+    /// # Endpoint: GET `/v2/documents/internalTransfer/byNumber`
+    pub async fn get_internal_transfers_by_number(
+        &self,
+        document_number: impl AsRef<str>,
+    ) -> Result<Vec<InternalTransferDto>> {
+        let response_json = self
+            .client
+            .get_with_params(
+                "v2/documents/internalTransfer/byNumber",
+                &[("documentNumber", document_number.as_ref())],
+            )
+            .await?;
+
+        let transfers: Vec<InternalTransferDto> = serde_json::from_str(&response_json)?;
+        Ok(transfers)
+    }
+
+    /// Создать или отредактировать внутреннее перемещение.
+    ///
+    /// # Endpoint: POST `/v2/documents/internalTransfer`
+    ///
+    /// Если `transfer.id` задан, iiko считает запрос редактированием. По документации
+    /// редактировать можно только документ в статусе `NEW`.
+    pub async fn upsert_internal_transfer(
+        &self,
+        transfer: InternalTransferDto,
+    ) -> Result<InternalTransferOperationResult> {
+        let json_body = json_to_string(&transfer)?;
+        let response_json = self
+            .client
+            .post_json("v2/documents/internalTransfer", &json_body, &[])
+            .await?;
+
+        let result: InternalTransferOperationResult = serde_json::from_str(&response_json)?;
+        Ok(result)
     }
 
     /// Импорт приходной накладной

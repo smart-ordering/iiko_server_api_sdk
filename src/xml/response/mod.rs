@@ -59,7 +59,8 @@ pub use documents::{
     IncomingInventoryDto, IncomingInventoryItemDto, IncomingInventoryItems,
     IncomingInventoryValidationResultDto, IncomingInventoryValidationResultItemDto,
     IncomingInventoryValidationResultItems, IncomingInvoiceDto, IncomingInvoiceItemDto,
-    IncomingInvoiceItems, InventoryItemStatus, OutgoingInvoiceDto, OutgoingInvoiceDtoes,
+    IncomingInvoiceItems, InternalTransferDto, InternalTransferItemDto, InternalTransferListResult,
+    InternalTransferOperationResult, InventoryItemStatus, OutgoingInvoiceDto, OutgoingInvoiceDtoes,
     OutgoingInvoiceItemDto, OutgoingInvoiceItems, ReturnedInvoiceDto, ReturnedInvoiceItemDto,
     ReturnedInvoiceItems,
 };

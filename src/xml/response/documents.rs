@@ -30,6 +30,127 @@ pub enum DocumentStatus {
     Deleted,
 }
 
+impl DocumentStatus {
+    pub fn as_api_str(&self) -> &'static str {
+        match self {
+            Self::New => "NEW",
+            Self::Processed => "PROCESSED",
+            Self::Deleted => "DELETED",
+        }
+    }
+}
+
+/// Внутреннее перемещение (InternalTransferDto).
+///
+/// # Согласно документации iikoServer API v7.9.3:
+/// Endpoint: `/resto/api/v2/documents/internalTransfer`
+///
+/// # Формат даты:
+/// - `dateIncoming`: `yyyy-MM-dd'T'HH:mm`, `yyyy-MM-dd'T'HH:mm:ss.SSS`
+///
+/// # Важно:
+/// - Для создания/редактирования обязательны `dateIncoming`, `status`, `storeFromId`,
+///   `storeToId` и минимум одна позиция.
+/// - Если `id` задан, сервер считает запрос редактированием. Редактировать можно
+///   только документ в статусе `NEW`.
+/// - Если `documentNumber` не задан, iiko сгенерирует его автоматически.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InternalTransferDto {
+    /// UUID документа. При создании можно не передавать.
+    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<Uuid>,
+    /// Дата документа.
+    #[serde(rename = "dateIncoming")]
+    pub date_incoming: String,
+    /// Номер документа. Если не задан при создании, генерируется iiko.
+    #[serde(
+        rename = "documentNumber",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub document_number: Option<String>,
+    /// Статус документа.
+    #[serde(rename = "status")]
+    pub status: DocumentStatus,
+    /// UUID концепции, если используется в iiko.
+    #[serde(
+        rename = "conceptionId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub conception_id: Option<Uuid>,
+    /// Комментарий к документу.
+    #[serde(rename = "comment", default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    /// Склад-источник.
+    #[serde(rename = "storeFromId")]
+    pub store_from_id: Uuid,
+    /// Склад-получатель.
+    #[serde(rename = "storeToId")]
+    pub store_to_id: Uuid,
+    /// Позиции документа.
+    #[serde(rename = "items", default)]
+    pub items: Vec<InternalTransferItemDto>,
+}
+
+/// Позиция внутреннего перемещения.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InternalTransferItemDto {
+    /// Номер строки. Сервер игнорирует значение при создании/редактировании.
+    #[serde(rename = "num", default, skip_serializing)]
+    pub num: Option<i32>,
+    /// Товар.
+    #[serde(rename = "productId")]
+    pub product_id: Uuid,
+    /// Количество в базовых единицах товара.
+    #[serde(rename = "amount")]
+    pub amount: f64,
+    /// Единица измерения. Только чтение в ответах iiko.
+    #[serde(rename = "measureUnitId", default, skip_serializing)]
+    pub measure_unit_id: Option<Uuid>,
+    /// Фасовка.
+    #[serde(
+        rename = "containerId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub container_id: Option<Uuid>,
+    /// Себестоимость. Только чтение в ответах iiko.
+    #[serde(rename = "cost", default, skip_serializing)]
+    pub cost: Option<f64>,
+}
+
+/// Результат списка внутренних перемещений.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InternalTransferListResult {
+    /// Результат операции: `SUCCESS` или `ERROR`.
+    #[serde(rename = "result")]
+    pub result: String,
+    /// Список ошибок валидации.
+    #[serde(rename = "errors", default)]
+    pub errors: Option<Vec<crate::xml::response::products::ErrorDto>>,
+    /// Список документов.
+    #[serde(rename = "response", default)]
+    pub response: Vec<InternalTransferDto>,
+    /// Максимальная ревизия, доступная для следующей инкрементальной выгрузки.
+    #[serde(rename = "revision", default)]
+    pub revision: Option<i64>,
+}
+
+/// Результат создания/редактирования внутреннего перемещения.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InternalTransferOperationResult {
+    /// Результат операции: `SUCCESS` или `ERROR`.
+    #[serde(rename = "result")]
+    pub result: String,
+    /// Список ошибок валидации.
+    #[serde(rename = "errors", default)]
+    pub errors: Option<Vec<crate::xml::response::products::ErrorDto>>,
+    /// Созданный или отредактированный документ.
+    #[serde(rename = "response")]
+    pub response: InternalTransferDto,
+}
+
 /// Алгоритм распределения дополнительных расходов
 ///
 /// # Согласно XSD (с версии 6.0):
@@ -967,4 +1088,95 @@ pub struct IncomingInventoryValidationResultItemDto {
     /// из-за возвратных накладных по цене покупки
     #[serde(rename = "differenceSum")]
     pub difference_sum: f64,
+}
+
+#[cfg(test)]
+mod internal_transfer_tests {
+    use super::*;
+
+    fn uuid(value: &str) -> Uuid {
+        Uuid::parse_str(value).unwrap()
+    }
+
+    #[test]
+    fn internal_transfer_list_result_deserializes_iiko_response() {
+        let json = r#"{
+            "result": "SUCCESS",
+            "errors": [],
+            "response": [{
+                "id": "f26f9661-c1c1-437e-b68a-e67cd78cc1a0",
+                "dateIncoming": "2021-04-01T12:08:36.340",
+                "documentNumber": "20002",
+                "status": "NEW",
+                "storeFromId": "7954d76d-6177-402c-ba2a-cc0ff16486fa",
+                "storeToId": "cfdfaff0-382c-4851-bba2-92b408db02ef",
+                "items": [{
+                    "num": 1,
+                    "productId": "ccdada6c-1643-4c52-9e09-752a4de117a0",
+                    "amount": 20,
+                    "measureUnitId": "cd19b5ea-1b32-a6e5-1df7-5d2784a0549a",
+                    "containerId": "e2e67737-18bf-437b-8230-8ec17da75096",
+                    "cost": null
+                }]
+            }],
+            "revision": 244615
+        }"#;
+
+        let result: InternalTransferListResult = serde_json::from_str(json).unwrap();
+
+        assert_eq!(result.result, "SUCCESS");
+        assert_eq!(result.revision, Some(244615));
+        assert_eq!(result.response.len(), 1);
+        let transfer = &result.response[0];
+        assert_eq!(transfer.status, DocumentStatus::New);
+        assert_eq!(transfer.document_number.as_deref(), Some("20002"));
+        assert_eq!(transfer.items[0].num, Some(1));
+        assert_eq!(transfer.items[0].amount, 20.0);
+        assert_eq!(
+            transfer.items[0].measure_unit_id,
+            Some(uuid("cd19b5ea-1b32-a6e5-1df7-5d2784a0549a"))
+        );
+        assert_eq!(transfer.items[0].cost, None);
+    }
+
+    #[test]
+    fn internal_transfer_serializes_create_payload_without_read_only_fields() {
+        let transfer = InternalTransferDto {
+            id: None,
+            date_incoming: "2021-11-15T06:00".to_string(),
+            document_number: None,
+            status: DocumentStatus::New,
+            conception_id: None,
+            comment: Some("zzz".to_string()),
+            store_from_id: uuid("05a407d4-d7c6-4bc2-a578-6ad5de99d468"),
+            store_to_id: uuid("370620fe-c789-46db-9d92-33bec29b82a3"),
+            items: vec![InternalTransferItemDto {
+                num: None,
+                product_id: uuid("ccdada6c-1643-4c52-9e09-752a4de117a0"),
+                amount: 5.0,
+                measure_unit_id: None,
+                container_id: Some(uuid("e2e67737-18bf-437b-8230-8ec17da75096")),
+                cost: None,
+            }],
+        };
+
+        let value = serde_json::to_value(&transfer).unwrap();
+
+        assert_eq!(value["dateIncoming"], "2021-11-15T06:00");
+        assert_eq!(value["status"], "NEW");
+        assert_eq!(value["comment"], "zzz");
+        assert_eq!(value["items"][0]["amount"], 5.0);
+        assert!(value.get("id").is_none());
+        assert!(value.get("documentNumber").is_none());
+        assert!(value["items"][0].get("num").is_none());
+        assert!(value["items"][0].get("measureUnitId").is_none());
+        assert!(value["items"][0].get("cost").is_none());
+    }
+
+    #[test]
+    fn document_status_exposes_iiko_wire_values() {
+        assert_eq!(DocumentStatus::New.as_api_str(), "NEW");
+        assert_eq!(DocumentStatus::Processed.as_api_str(), "PROCESSED");
+        assert_eq!(DocumentStatus::Deleted.as_api_str(), "DELETED");
+    }
 }
