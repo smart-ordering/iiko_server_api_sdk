@@ -48,7 +48,7 @@ impl<'a> ProductScalesEndpoint<'a> {
         }
 
         let mut idx = 0;
-        if let Some(include_del) = include_deleted {
+        if include_deleted.is_some() {
             params.push(("includeDeleted", param_strings[idx].as_str()));
             idx += 1;
         }
@@ -102,7 +102,7 @@ impl<'a> ProductScalesEndpoint<'a> {
         }
 
         let mut idx = 0;
-        if let Some(_) = include_deleted {
+        if include_deleted.is_some() {
             form_data.push(("includeDeleted", form_strings[idx].as_str()));
             idx += 1;
         }
@@ -284,7 +284,7 @@ impl<'a> ProductScalesEndpoint<'a> {
         }
 
         let mut idx = 0;
-        if let Some(_) = include_deleted_products {
+        if include_deleted_products.is_some() {
             params.push(("includeDeletedProducts", param_strings[idx].as_str()));
             idx += 1;
         }
@@ -351,7 +351,7 @@ impl<'a> ProductScalesEndpoint<'a> {
         }
 
         let mut idx = 0;
-        if let Some(_) = include_deleted_products {
+        if include_deleted_products.is_some() {
             form_data.push(("includeDeletedProducts", form_strings[idx].as_str()));
             idx += 1;
         }

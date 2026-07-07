@@ -45,13 +45,12 @@ impl<'a> EmployeesEndpoint<'a> {
 
         // Затем создаем ссылки на них
         let mut idx = 0;
-        if let Some(_) = include_deleted {
+        if include_deleted.is_some() {
             params.push(("includeDeleted", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = revision_from {
+        if revision_from.is_some() {
             params.push(("revisionFrom", param_strings[idx].as_str()));
-            idx += 1;
         }
 
         let response_xml = if params.is_empty() {
@@ -91,7 +90,7 @@ impl<'a> EmployeesEndpoint<'a> {
         }
 
         // Затем создаем ссылки на них
-        if let Some(_) = include_deleted {
+        if include_deleted.is_some() {
             params.push(("includeDeleted", param_strings[0].as_str()));
         }
 
@@ -155,7 +154,7 @@ impl<'a> EmployeesEndpoint<'a> {
     /// - `address`, `card_number`, `cell_phone`, `client`, `code`, `email`, `employee`,
     ///   `first_name`, `last_name`, `login`, `main_role_code`, `middle_name`, `name`,
     ///   `note`, `phone`, `supplier`
-    /// Параметры необязательные. Если отсутствуют, вернет всех активных.
+    ///   Параметры необязательные. Если отсутствуют, вернет всех активных.
     /// - `include_deleted`: Возвращать и действующих, и удаленных сотрудников (с версии 5.0)
     ///
     /// # Что в ответе:
@@ -238,73 +237,72 @@ impl<'a> EmployeesEndpoint<'a> {
 
         // Создаем params, используя индексы
         let mut idx = 0;
-        if let Some(_) = address {
+        if address.is_some() {
             params.push(("address", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = card_number {
+        if card_number.is_some() {
             params.push(("cardNumber", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = cell_phone {
+        if cell_phone.is_some() {
             params.push(("cellPhone", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = client {
+        if client.is_some() {
             params.push(("client", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = code {
+        if code.is_some() {
             params.push(("code", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = email {
+        if email.is_some() {
             params.push(("email", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = employee {
+        if employee.is_some() {
             params.push(("employee", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = first_name {
+        if first_name.is_some() {
             params.push(("firstName", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = last_name {
+        if last_name.is_some() {
             params.push(("lastName", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = login {
+        if login.is_some() {
             params.push(("login", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = main_role_code {
+        if main_role_code.is_some() {
             params.push(("mainRoleCode", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = middle_name {
+        if middle_name.is_some() {
             params.push(("middleName", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = name {
+        if name.is_some() {
             params.push(("name", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = note {
+        if note.is_some() {
             params.push(("note", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = phone {
+        if phone.is_some() {
             params.push(("phone", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = supplier {
+        if supplier.is_some() {
             params.push(("supplier", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = include_deleted {
+        if include_deleted.is_some() {
             params.push(("includeDeleted", param_strings[idx].as_str()));
-            idx += 1;
         }
 
         let response_xml = self

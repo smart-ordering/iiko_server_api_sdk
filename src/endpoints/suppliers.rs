@@ -116,45 +116,44 @@ impl<'a> SuppliersEndpoint<'a> {
 
         // Теперь создаем params, используя индексы
         let mut idx = 0;
-        if let Some(_) = name {
+        if name.is_some() {
             params.push(("name", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = code {
+        if code.is_some() {
             params.push(("code", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = phone {
+        if phone.is_some() {
             params.push(("phone", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = cell_phone {
+        if cell_phone.is_some() {
             params.push(("cellPhone", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = first_name {
+        if first_name.is_some() {
             params.push(("firstName", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = middle_name {
+        if middle_name.is_some() {
             params.push(("middleName", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = last_name {
+        if last_name.is_some() {
             params.push(("lastName", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = email {
+        if email.is_some() {
             params.push(("email", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = card_number {
+        if card_number.is_some() {
             params.push(("cardNumber", param_strings[idx].as_str()));
             idx += 1;
         }
-        if let Some(_) = taxpayer_id_number {
+        if taxpayer_id_number.is_some() {
             params.push(("taxpayerIdNumber", param_strings[idx].as_str()));
-            idx += 1;
         }
 
         let response_xml = self
@@ -213,10 +212,10 @@ fn parse_supplier_pricelist_response(xml: &str) -> Result<Vec<SupplierPriceListI
         || xml.contains("<supplierPriceList ")
         || xml.contains("</supplierPriceList>");
 
-    if let Ok(wrapper) = from_str::<SupplierPriceListEnvelope>(xml) {
-        if has_supplier_pricelist_wrapper || !wrapper.items.is_empty() {
-            return Ok(wrapper.items);
-        }
+    if let Ok(wrapper) = from_str::<SupplierPriceListEnvelope>(xml)
+        && (has_supplier_pricelist_wrapper || !wrapper.items.is_empty())
+    {
+        return Ok(wrapper.items);
     }
 
     let item: SupplierPriceListItemDto = from_str(xml)?;

@@ -249,7 +249,7 @@ async fn test_import_outgoing_invoice() {
     assert!(!products.is_empty(), "No products found");
     let product = products.first().unwrap();
     let product_id = product.id.expect("Product must have an ID");
-    let product_article = product.num.as_ref().map(|a| a.clone());
+    let product_article = product.num.clone();
 
     // Получаем список складов
     let stores = client
@@ -261,7 +261,7 @@ async fn test_import_outgoing_invoice() {
     assert!(!stores.is_empty(), "No stores found");
     let store = stores.first().unwrap();
     let store_id = store.id.to_string();
-    let store_code = store.code.as_ref().map(|c| c.clone());
+    let store_code = store.code.clone();
 
     // Формируем текущую дату в формате yyyy-MM-ddTHH:mm:ss
     let now = chrono::Local::now();
@@ -344,7 +344,7 @@ async fn test_import_outgoing_invoice_minimal() {
     assert!(!products.is_empty(), "No products found");
     let product = products.first().unwrap();
     let product_id = product.id.expect("Product must have an ID");
-    let product_article = product.num.as_ref().map(|a| a.clone());
+    let product_article = product.num.clone();
 
     let stores = client
         .corporation()
@@ -355,7 +355,7 @@ async fn test_import_outgoing_invoice_minimal() {
     assert!(!stores.is_empty(), "No stores found");
     let store = stores.first().unwrap();
     let store_id = store.id.to_string();
-    let store_code = store.code.as_ref().map(|c| c.clone());
+    let store_code = store.code.clone();
 
     let now = chrono::Local::now();
     let date_incoming = now.format("%Y-%m-%dT%H:%M:%S").to_string();
@@ -529,8 +529,7 @@ async fn test_unprocess_incoming_invoice() {
     let final_document_number = import_result
         .document_number
         .as_ref()
-        .or(Some(&document_number))
-        .unwrap()
+        .unwrap_or(&document_number)
         .clone();
 
     let unprocess_invoice = IncomingInvoiceDto {
@@ -591,7 +590,7 @@ async fn test_unprocess_outgoing_invoice() {
     assert!(!products.is_empty(), "No products found");
     let product = products.first().unwrap();
     let product_id = product.id.expect("Product must have an ID");
-    let product_article = product.num.as_ref().map(|a| a.clone());
+    let product_article = product.num.clone();
 
     let stores = client
         .corporation()
@@ -602,7 +601,7 @@ async fn test_unprocess_outgoing_invoice() {
     assert!(!stores.is_empty(), "No stores found");
     let store = stores.first().unwrap();
     let store_id = store.id.to_string();
-    let store_code = store.code.as_ref().map(|c| c.clone());
+    let store_code = store.code.clone();
 
     let now = chrono::Local::now();
     let date_incoming = now.format("%Y-%m-%dT%H:%M:%S").to_string();
@@ -673,8 +672,7 @@ async fn test_unprocess_outgoing_invoice() {
     let final_document_number = import_result
         .document_number
         .as_ref()
-        .or(Some(&document_number))
-        .unwrap()
+        .unwrap_or(&document_number)
         .clone();
 
     let unprocess_invoice = OutgoingInvoiceDto {
@@ -1069,7 +1067,7 @@ async fn test_import_returned_invoice() {
         store_cost_affected: false,
         account_to_code: Some("5.01".to_string()),
         default_store_id: Some(store_id.to_string()),
-        default_store_code: store.code.as_ref().map(|c| c.clone()),
+        default_store_code: store.code.clone(),
         counteragent_id: Some(supplier_id.to_string()),
         counteragent_code: None,
         conception_id: None,
@@ -1078,12 +1076,12 @@ async fn test_import_returned_invoice() {
         items: Some(ReturnedInvoiceItems {
             items: vec![ReturnedInvoiceItemDto {
                 product_id: Some(product_id.to_string()),
-                product_article: product.num.as_ref().map(|a| a.clone()),
+                product_article: product.num.clone(),
                 supplier_product: None,
                 supplier_product_article: None,
                 customs_declaration_number: None,
                 store_id: Some(store_id.to_string()),
-                store_code: store.code.as_ref().map(|c| c.clone()),
+                store_code: store.code.clone(),
                 container_id: None,
                 container_code: None,
                 price: 100.0,
@@ -1144,7 +1142,7 @@ async fn test_import_incoming_inventory() {
     assert!(!stores.is_empty(), "No stores found");
     let store = stores.first().unwrap();
     let store_id = store.id.to_string();
-    let store_code = store.code.as_ref().map(|c| c.clone());
+    let store_code = store.code.clone();
 
     let now = chrono::Local::now();
     let date_incoming = now.format("%Y-%m-%dT%H:%M:%S").to_string();
@@ -1167,7 +1165,7 @@ async fn test_import_incoming_inventory() {
                 status: Some(InventoryItemStatus::New),
                 recalculation_number: None,
                 product_id: Some(product_id.to_string()),
-                product_article: product.num.as_ref().map(|a| a.clone()),
+                product_article: product.num.clone(),
                 container_id: None,
                 container_code: None,
                 amount_container: Some(10.0),

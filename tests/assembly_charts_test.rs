@@ -78,7 +78,7 @@ async fn test_get_tree() {
         Ok(charts) => {
             println!(
                 "Tree for product {}: {} assembly charts, {} prepared charts",
-                product_id.to_string(),
+                product_id,
                 charts
                     .assembly_charts
                     .as_ref()
@@ -139,16 +139,13 @@ async fn test_get_assembled() {
                     let chart = &assembly_charts[0];
                     println!(
                         "Assembled chart for product {}: {} items, dateFrom: {}, dateTo: {:?}",
-                        product_id.to_string(),
+                        product_id,
                         chart.items.len(),
                         chart.date_from,
                         chart.date_to
                     );
                 } else {
-                    println!(
-                        "No assembly chart found for product {}",
-                        product_id.to_string()
-                    );
+                    println!("No assembly chart found for product {}", product_id);
                 }
             }
         }
@@ -203,14 +200,11 @@ async fn test_get_prepared() {
                     let chart = &prepared_charts[0];
                     println!(
                         "Prepared chart for product {}: {} items",
-                        product_id.to_string(),
+                        product_id,
                         chart.items.len()
                     );
                 } else {
-                    println!(
-                        "No prepared chart found for product {}",
-                        product_id.to_string()
-                    );
+                    println!("No prepared chart found for product {}", product_id);
                 }
             }
         }
@@ -258,7 +252,7 @@ async fn test_get_history() {
         Ok(history) => {
             println!(
                 "History for product {}: {} charts",
-                product_id.to_string(),
+                product_id,
                 history.len()
             );
             for chart in history.iter().take(3) {

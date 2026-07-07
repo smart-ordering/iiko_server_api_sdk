@@ -43,10 +43,10 @@ async fn test_get_supplier_pricelist() {
     let mut seen_codes = HashSet::new();
     let mut candidate_codes = Vec::new();
 
-    if let Some(code) = preferred_code {
-        if seen_codes.insert(code.clone()) {
-            candidate_codes.push(code);
-        }
+    if let Some(code) = preferred_code
+        && seen_codes.insert(code.clone())
+    {
+        candidate_codes.push(code);
     }
 
     for supplier in suppliers

@@ -59,7 +59,7 @@ async fn test_save_category() {
             // Удаляем созданную категорию для очистки
             let _ = client
                 .products()
-                .delete_category(category_result.response.id.clone())
+                .delete_category(category_result.response.id)
                 .await;
         }
         Err(e) => {

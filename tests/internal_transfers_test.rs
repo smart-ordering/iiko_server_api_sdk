@@ -34,7 +34,11 @@ async fn qitech_internal_transfer_list_read_only() {
 #[tokio::test]
 #[ignore = "live write smoke; creates a real internalTransfer in the configured safe iiko integration"]
 async fn qitech_internal_transfer_create_live() {
-    if env::var("IIKO_ALLOW_INTERNAL_TRANSFER_WRITE").ok().as_deref() != Some("1") {
+    if env::var("IIKO_ALLOW_INTERNAL_TRANSFER_WRITE")
+        .ok()
+        .as_deref()
+        != Some("1")
+    {
         panic!("Set IIKO_ALLOW_INTERNAL_TRANSFER_WRITE=1 to create a real iiko internalTransfer");
     }
 
@@ -44,7 +48,10 @@ async fn qitech_internal_transfer_create_live() {
         .get_stores(None)
         .await
         .expect("Failed to fetch stores");
-    assert!(stores.len() >= 2, "Need at least two stores for internalTransfer");
+    assert!(
+        stores.len() >= 2,
+        "Need at least two stores for internalTransfer"
+    );
 
     let store_from_id = env::var("IIKO_TEST_INTERNAL_TRANSFER_STORE_FROM_ID")
         .ok()
@@ -54,7 +61,10 @@ async fn qitech_internal_transfer_create_live() {
         .ok()
         .and_then(|value| Uuid::parse_str(&value).ok())
         .unwrap_or(stores[1].id);
-    assert_ne!(store_from_id, store_to_id, "source and destination stores must differ");
+    assert_ne!(
+        store_from_id, store_to_id,
+        "source and destination stores must differ"
+    );
 
     let products = client
         .products()
@@ -79,7 +89,9 @@ async fn qitech_internal_transfer_create_live() {
     {
         "PROCESSED" => DocumentStatus::Processed,
         "NEW" => DocumentStatus::New,
-        other => panic!("Unsupported IIKO_TEST_INTERNAL_TRANSFER_STATUS={other}; use NEW or PROCESSED"),
+        other => {
+            panic!("Unsupported IIKO_TEST_INTERNAL_TRANSFER_STATUS={other}; use NEW or PROCESSED")
+        }
     };
 
     let document_number = format!("NAKLAD-QITECH-IT-{}", Local::now().timestamp_millis());
@@ -113,7 +125,10 @@ async fn qitech_internal_transfer_create_live() {
         result.result, result.response.id, result.response.document_number, result.errors
     );
     assert_eq!(result.result.to_uppercase(), "SUCCESS");
-    assert_eq!(result.response.document_number.as_deref(), Some(document_number.as_str()));
+    assert_eq!(
+        result.response.document_number.as_deref(),
+        Some(document_number.as_str())
+    );
 
     if let Some(id) = result.response.id {
         let by_id = client
@@ -122,7 +137,10 @@ async fn qitech_internal_transfer_create_live() {
             .await
             .expect("Failed to load internalTransfer by id");
         assert_eq!(by_id.id, Some(id));
-        assert_eq!(by_id.document_number.as_deref(), Some(document_number.as_str()));
+        assert_eq!(
+            by_id.document_number.as_deref(),
+            Some(document_number.as_str())
+        );
     }
 
     let by_number = client
