@@ -32,26 +32,22 @@ impl<'a> EmployeesEndpoint<'a> {
         include_deleted: Option<bool>,
         revision_from: Option<i64>,
     ) -> Result<Vec<Employee>> {
-        let mut param_strings = Vec::new();
-        let mut params = Vec::new();
+        let mut param_values = Vec::new();
 
-        // Сначала собираем все строки
         if let Some(inc_del) = include_deleted {
-            param_strings.push(if inc_del { "true" } else { "false" }.to_string());
+            param_values.push((
+                "includeDeleted",
+                if inc_del { "true" } else { "false" }.to_string(),
+            ));
         }
         if let Some(rev) = revision_from {
-            param_strings.push(rev.to_string());
+            param_values.push(("revisionFrom", rev.to_string()));
         }
 
-        // Затем создаем ссылки на них
-        let mut idx = 0;
-        if include_deleted.is_some() {
-            params.push(("includeDeleted", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if revision_from.is_some() {
-            params.push(("revisionFrom", param_strings[idx].as_str()));
-        }
+        let params: Vec<(&str, &str)> = param_values
+            .iter()
+            .map(|(key, value)| (*key, value.as_str()))
+            .collect();
 
         let response_xml = if params.is_empty() {
             self.client.get("employees").await?
@@ -179,131 +175,67 @@ impl<'a> EmployeesEndpoint<'a> {
         supplier: Option<bool>,
         include_deleted: Option<bool>,
     ) -> Result<Vec<Employee>> {
-        let mut param_strings = Vec::new();
-        let mut params = Vec::new();
+        let mut param_values = Vec::new();
 
-        // Собираем все строки
         if let Some(a) = address {
-            param_strings.push(a.to_string());
+            param_values.push(("address", a.to_string()));
         }
         if let Some(cn) = card_number {
-            param_strings.push(cn.to_string());
+            param_values.push(("cardNumber", cn.to_string()));
         }
         if let Some(cp) = cell_phone {
-            param_strings.push(cp.to_string());
+            param_values.push(("cellPhone", cp.to_string()));
         }
         if let Some(c) = client {
-            param_strings.push(if c { "true" } else { "false" }.to_string());
+            param_values.push(("client", if c { "true" } else { "false" }.to_string()));
         }
         if let Some(c) = code {
-            param_strings.push(c.to_string());
+            param_values.push(("code", c.to_string()));
         }
         if let Some(e) = email {
-            param_strings.push(e.to_string());
+            param_values.push(("email", e.to_string()));
         }
         if let Some(e) = employee {
-            param_strings.push(if e { "true" } else { "false" }.to_string());
+            param_values.push(("employee", if e { "true" } else { "false" }.to_string()));
         }
         if let Some(fn_val) = first_name {
-            param_strings.push(fn_val.to_string());
+            param_values.push(("firstName", fn_val.to_string()));
         }
         if let Some(ln) = last_name {
-            param_strings.push(ln.to_string());
+            param_values.push(("lastName", ln.to_string()));
         }
         if let Some(l) = login {
-            param_strings.push(l.to_string());
+            param_values.push(("login", l.to_string()));
         }
         if let Some(mrc) = main_role_code {
-            param_strings.push(mrc.to_string());
+            param_values.push(("mainRoleCode", mrc.to_string()));
         }
         if let Some(mn) = middle_name {
-            param_strings.push(mn.to_string());
+            param_values.push(("middleName", mn.to_string()));
         }
         if let Some(n) = name {
-            param_strings.push(n.to_string());
+            param_values.push(("name", n.to_string()));
         }
         if let Some(n) = note {
-            param_strings.push(n.to_string());
+            param_values.push(("note", n.to_string()));
         }
         if let Some(p) = phone {
-            param_strings.push(p.to_string());
+            param_values.push(("phone", p.to_string()));
         }
         if let Some(s) = supplier {
-            param_strings.push(if s { "true" } else { "false" }.to_string());
+            param_values.push(("supplier", if s { "true" } else { "false" }.to_string()));
         }
         if let Some(inc_del) = include_deleted {
-            param_strings.push(if inc_del { "true" } else { "false" }.to_string());
+            param_values.push((
+                "includeDeleted",
+                if inc_del { "true" } else { "false" }.to_string(),
+            ));
         }
 
-        // Создаем params, используя индексы
-        let mut idx = 0;
-        if address.is_some() {
-            params.push(("address", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if card_number.is_some() {
-            params.push(("cardNumber", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if cell_phone.is_some() {
-            params.push(("cellPhone", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if client.is_some() {
-            params.push(("client", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if code.is_some() {
-            params.push(("code", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if email.is_some() {
-            params.push(("email", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if employee.is_some() {
-            params.push(("employee", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if first_name.is_some() {
-            params.push(("firstName", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if last_name.is_some() {
-            params.push(("lastName", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if login.is_some() {
-            params.push(("login", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if main_role_code.is_some() {
-            params.push(("mainRoleCode", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if middle_name.is_some() {
-            params.push(("middleName", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if name.is_some() {
-            params.push(("name", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if note.is_some() {
-            params.push(("note", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if phone.is_some() {
-            params.push(("phone", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if supplier.is_some() {
-            params.push(("supplier", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if include_deleted.is_some() {
-            params.push(("includeDeleted", param_strings[idx].as_str()));
-        }
+        let params: Vec<(&str, &str)> = param_values
+            .iter()
+            .map(|(key, value)| (*key, value.as_str()))
+            .collect();
 
         let response_xml = self
             .client

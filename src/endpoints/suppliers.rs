@@ -79,82 +79,43 @@ impl<'a> SuppliersEndpoint<'a> {
         card_number: Option<&str>,
         taxpayer_id_number: Option<&str>,
     ) -> Result<Vec<Supplier>> {
-        let mut param_strings = Vec::new();
-        let mut params = Vec::new();
+        let mut param_values = Vec::new();
 
-        // Сначала собираем все строки
         if let Some(n) = name {
-            param_strings.push(n.to_string());
+            param_values.push(("name", n.to_string()));
         }
         if let Some(c) = code {
-            param_strings.push(c.to_string());
+            param_values.push(("code", c.to_string()));
         }
         if let Some(p) = phone {
-            param_strings.push(p.to_string());
+            param_values.push(("phone", p.to_string()));
         }
         if let Some(cp) = cell_phone {
-            param_strings.push(cp.to_string());
+            param_values.push(("cellPhone", cp.to_string()));
         }
         if let Some(fn_val) = first_name {
-            param_strings.push(fn_val.to_string());
+            param_values.push(("firstName", fn_val.to_string()));
         }
         if let Some(mn) = middle_name {
-            param_strings.push(mn.to_string());
+            param_values.push(("middleName", mn.to_string()));
         }
         if let Some(ln) = last_name {
-            param_strings.push(ln.to_string());
+            param_values.push(("lastName", ln.to_string()));
         }
         if let Some(e) = email {
-            param_strings.push(e.to_string());
+            param_values.push(("email", e.to_string()));
         }
         if let Some(cn) = card_number {
-            param_strings.push(cn.to_string());
+            param_values.push(("cardNumber", cn.to_string()));
         }
         if let Some(tin) = taxpayer_id_number {
-            param_strings.push(tin.to_string());
+            param_values.push(("taxpayerIdNumber", tin.to_string()));
         }
 
-        // Теперь создаем params, используя индексы
-        let mut idx = 0;
-        if name.is_some() {
-            params.push(("name", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if code.is_some() {
-            params.push(("code", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if phone.is_some() {
-            params.push(("phone", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if cell_phone.is_some() {
-            params.push(("cellPhone", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if first_name.is_some() {
-            params.push(("firstName", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if middle_name.is_some() {
-            params.push(("middleName", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if last_name.is_some() {
-            params.push(("lastName", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if email.is_some() {
-            params.push(("email", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if card_number.is_some() {
-            params.push(("cardNumber", param_strings[idx].as_str()));
-            idx += 1;
-        }
-        if taxpayer_id_number.is_some() {
-            params.push(("taxpayerIdNumber", param_strings[idx].as_str()));
-        }
+        let params: Vec<(&str, &str)> = param_values
+            .iter()
+            .map(|(key, value)| (*key, value.as_str()))
+            .collect();
 
         let response_xml = self
             .client

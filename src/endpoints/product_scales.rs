@@ -34,31 +34,22 @@ impl<'a> ProductScalesEndpoint<'a> {
         ids: Option<Vec<Uuid>>,
         include_deleted: Option<bool>,
     ) -> Result<Vec<ProductScaleDto>> {
-        let mut param_strings = Vec::new();
-        let mut params = Vec::new();
+        let mut param_values = Vec::new();
 
         if let Some(include_del) = include_deleted {
-            param_strings.push(include_del.to_string());
+            param_values.push(("includeDeleted", include_del.to_string()));
         }
 
         if let Some(ref id_list) = ids {
             for id in id_list {
-                param_strings.push(id.to_string());
+                param_values.push(("ids", id.to_string()));
             }
         }
 
-        let mut idx = 0;
-        if include_deleted.is_some() {
-            params.push(("includeDeleted", param_strings[idx].as_str()));
-            idx += 1;
-        }
-
-        if let Some(ref id_list) = ids {
-            for _ in id_list {
-                params.push(("ids", param_strings[idx].as_str()));
-                idx += 1;
-            }
-        }
+        let params: Vec<(&str, &str)> = param_values
+            .iter()
+            .map(|(key, value)| (*key, value.as_str()))
+            .collect();
 
         let response_json = if params.is_empty() {
             self.client.get("v2/entities/productScales").await?
@@ -88,31 +79,22 @@ impl<'a> ProductScalesEndpoint<'a> {
         ids: Option<Vec<Uuid>>,
         include_deleted: Option<bool>,
     ) -> Result<Vec<ProductScaleDto>> {
-        let mut form_strings = Vec::new();
-        let mut form_data = Vec::new();
+        let mut form_values = Vec::new();
 
         if let Some(include_del) = include_deleted {
-            form_strings.push(include_del.to_string());
+            form_values.push(("includeDeleted", include_del.to_string()));
         }
 
         if let Some(ref id_list) = ids {
             for id in id_list {
-                form_strings.push(id.to_string());
+                form_values.push(("ids", id.to_string()));
             }
         }
 
-        let mut idx = 0;
-        if include_deleted.is_some() {
-            form_data.push(("includeDeleted", form_strings[idx].as_str()));
-            idx += 1;
-        }
-
-        if let Some(ref id_list) = ids {
-            for _ in id_list {
-                form_data.push(("ids", form_strings[idx].as_str()));
-                idx += 1;
-            }
-        }
+        let form_data: Vec<(&str, &str)> = form_values
+            .iter()
+            .map(|(key, value)| (*key, value.as_str()))
+            .collect();
 
         let response_json = self
             .client
@@ -270,31 +252,22 @@ impl<'a> ProductScalesEndpoint<'a> {
         product_ids: Option<Vec<Uuid>>,
         include_deleted_products: Option<bool>,
     ) -> Result<HashMap<Uuid, Option<ProductScaleDto>>> {
-        let mut param_strings = Vec::new();
-        let mut params = Vec::new();
+        let mut param_values = Vec::new();
 
         if let Some(include_del) = include_deleted_products {
-            param_strings.push(include_del.to_string());
+            param_values.push(("includeDeletedProducts", include_del.to_string()));
         }
 
         if let Some(ref id_list) = product_ids {
             for id in id_list {
-                param_strings.push(id.to_string());
+                param_values.push(("productId", id.to_string()));
             }
         }
 
-        let mut idx = 0;
-        if include_deleted_products.is_some() {
-            params.push(("includeDeletedProducts", param_strings[idx].as_str()));
-            idx += 1;
-        }
-
-        if let Some(ref id_list) = product_ids {
-            for _ in id_list {
-                params.push(("productId", param_strings[idx].as_str()));
-                idx += 1;
-            }
-        }
+        let params: Vec<(&str, &str)> = param_values
+            .iter()
+            .map(|(key, value)| (*key, value.as_str()))
+            .collect();
 
         let response_json = if params.is_empty() {
             self.client
@@ -337,31 +310,22 @@ impl<'a> ProductScalesEndpoint<'a> {
         product_ids: Option<Vec<Uuid>>,
         include_deleted_products: Option<bool>,
     ) -> Result<HashMap<Uuid, Option<ProductScaleDto>>> {
-        let mut form_strings = Vec::new();
-        let mut form_data = Vec::new();
+        let mut form_values = Vec::new();
 
         if let Some(include_del) = include_deleted_products {
-            form_strings.push(include_del.to_string());
+            form_values.push(("includeDeletedProducts", include_del.to_string()));
         }
 
         if let Some(ref id_list) = product_ids {
             for id in id_list {
-                form_strings.push(id.to_string());
+                form_values.push(("productId", id.to_string()));
             }
         }
 
-        let mut idx = 0;
-        if include_deleted_products.is_some() {
-            form_data.push(("includeDeletedProducts", form_strings[idx].as_str()));
-            idx += 1;
-        }
-
-        if let Some(ref id_list) = product_ids {
-            for _ in id_list {
-                form_data.push(("productId", form_strings[idx].as_str()));
-                idx += 1;
-            }
-        }
+        let form_data: Vec<(&str, &str)> = form_values
+            .iter()
+            .map(|(key, value)| (*key, value.as_str()))
+            .collect();
 
         let response_json = self
             .client
