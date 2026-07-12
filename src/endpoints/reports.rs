@@ -766,12 +766,6 @@ impl<'a> ReportsEndpoint<'a> {
             .get_with_params("reports/productExpense", &params)
             .await?;
 
-        // Логируем сырой XML-ответ для отладки
-        eprintln!(
-            "iiko productExpense raw XML response: department={}, date_from={}, date_to={}, hour_from={:?}, hour_to={:?}, body={}",
-            department, date_from, date_to, hour_from, hour_to, response_xml
-        );
-
         // XML может быть:
         // - списком элементов внутри обертки <dayDishValues>
         // - списком элементов без обертки
@@ -788,6 +782,13 @@ impl<'a> ReportsEndpoint<'a> {
                 let item: DayDishValue = from_str(&response_xml)?;
                 vec![item]
             };
+        eprintln!(
+            "iiko productExpense response: date_from={}, date_to={}, rows={}, response_bytes={}",
+            date_from,
+            date_to,
+            items.len(),
+            response_xml.len(),
+        );
         Ok(items)
     }
 
