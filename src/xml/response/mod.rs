@@ -23,6 +23,7 @@ pub mod events;
 pub mod images;
 pub mod inventory;
 pub mod product_scales;
+pub mod production_order_blanks;
 pub mod products;
 pub mod replication;
 pub mod reports;
@@ -94,6 +95,11 @@ pub use product_scales::{
     ProductProductScaleRequest, ProductScaleDto, ProductScaleOperationResult,
     ProductScaleSaveRequest, ProductScaleUpdateRequest, ProductSizeDto, ProductSizeFactorDto,
     ProductSizeProductRequest, ProductSizeSaveDto,
+};
+
+pub use production_order_blanks::{
+    ProductionOrderBlank, ProductionOrderBlankExcludedStores, ProductionOrderBlankItem,
+    ProductionOrderBlankItems, ProductionOrderBlankTab, ProductionOrderBlankTabs,
 };
 
 // Re-export reports types

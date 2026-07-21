@@ -34,20 +34,22 @@ pub use xml::response::{
     ProductGroupDto, ProductOperationResult, ProductProductScaleRequest, ProductScaleDto,
     ProductScaleOperationResult, ProductScaleSaveRequest, ProductScaleUpdateRequest,
     ProductSizeAssemblyStrategy, ProductSizeDto, ProductSizeFactorDto, ProductSizeProductRequest,
-    ProductSizeSaveDto, ProductType, ProductWriteoffStrategy, ProductsOperationResult,
-    PublicExternalData, RangeFilter, ReferenceEntity, ReferenceEntityDto, ReplicationStatus,
-    ReturnedInvoiceDto, ReturnedInvoiceItemDto, ReturnedInvoiceItems, ServerType,
-    StoreDataDirection, StoreDocumentType, StoreFilterList, StoreOperationsReportGrouping,
-    StoreReportFilter, StoreReportItemDto, StoreReportPreset, StoreSpecification,
-    StoreTransactionType, Supplier, SupplierContainerDto, SupplierPriceList,
-    SupplierPriceListItemDto, Suppliers, TerminalDto, TransactionTypeList, ValueFilter,
+    ProductSizeSaveDto, ProductType, ProductWriteoffStrategy, ProductionOrderBlank,
+    ProductionOrderBlankExcludedStores, ProductionOrderBlankItem, ProductionOrderBlankItems,
+    ProductionOrderBlankTab, ProductionOrderBlankTabs, ProductsOperationResult, PublicExternalData,
+    RangeFilter, ReferenceEntity, ReferenceEntityDto, ReplicationStatus, ReturnedInvoiceDto,
+    ReturnedInvoiceItemDto, ReturnedInvoiceItems, ServerType, StoreDataDirection,
+    StoreDocumentType, StoreFilterList, StoreOperationsReportGrouping, StoreReportFilter,
+    StoreReportItemDto, StoreReportPreset, StoreSpecification, StoreTransactionType, Supplier,
+    SupplierContainerDto, SupplierPriceList, SupplierPriceListItemDto, Suppliers, TerminalDto,
+    TransactionTypeList, ValueFilter,
 };
 
 use endpoints::{
     AssemblyChartsEndpoint, AuthEndpoint, CorporationEndpoint, DocumentsEndpoint,
     EmployeesEndpoint, EntitiesEndpoint, EventsEndpoint, ImagesEndpoint, InventoryEndpoint,
-    ProductScalesEndpoint, ProductsEndpoint, ReplicationEndpoint, ReportsEndpoint,
-    SuppliersEndpoint,
+    ProductScalesEndpoint, ProductionOrderBlanksEndpoint, ProductsEndpoint, ReplicationEndpoint,
+    ReportsEndpoint, SuppliersEndpoint,
 };
 
 impl IikoClient {
@@ -97,6 +99,10 @@ impl IikoClient {
 
     pub fn product_scales(&self) -> ProductScalesEndpoint<'_> {
         ProductScalesEndpoint::new(self)
+    }
+
+    pub fn production_order_blanks(&self) -> ProductionOrderBlanksEndpoint<'_> {
+        ProductionOrderBlanksEndpoint::new(self)
     }
 
     pub fn reports(&self) -> ReportsEndpoint<'_> {
