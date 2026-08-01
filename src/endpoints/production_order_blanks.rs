@@ -55,7 +55,7 @@ impl<'a> ProductionOrderBlanksEndpoint<'a> {
         for batch in unique_ids.chunks(DETAIL_BATCH_SIZE) {
             let response = self
                 .client
-                .post_xml(
+                .post_xml_readonly(
                     "v3/EntitiesService.getEntitiesByIds",
                     &build_entity_ids_request(batch),
                 )

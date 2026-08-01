@@ -95,14 +95,21 @@ impl IikoClient {
     }
 
     pub async fn logout(&self) -> Result<String> {
-        // Logout также должен быть последовательным
+        Ok(self.logout_if_authenticated().await?.unwrap_or_default())
+    }
+
+    /// Releases the current server-side session without creating a session solely to log it out.
+    ///
+    /// This is the safe primitive for session brokers and cache eviction. `None` means this
+    /// client has not authenticated (or was already logged out), so no HTTP request was made.
+    pub async fn logout_if_authenticated(&self) -> Result<Option<String>> {
+        // Logout также должен быть последовательным.
         let _guard = self.request_mutex.lock().await;
-
-        let session_id = self.authenticate_internal().await?;
+        let Some(session_id) = self.session_id.read().await.clone() else {
+            return Ok(None);
+        };
         let url = format!("{}/logout", self.config.base_url);
-
         let form = [("key", session_id.as_str())];
-
         let response = self
             .http_client
             .post(&url)
@@ -121,11 +128,8 @@ impl IikoClient {
         }
 
         let result = response.text().await?.trim().to_string();
-
-        // Invalidate session after successful logout
         self.invalidate_session().await;
-
-        Ok(result)
+        Ok(Some(result))
     }
 
     fn handle_error_response(status: reqwest::StatusCode, error_text: String) -> IikoError {
@@ -213,6 +217,47 @@ impl IikoClient {
             return Err(Self::handle_error_response(status, error_text));
         }
 
+        Ok(response.text().await?)
+    }
+
+    async fn send_authenticated_post_xml(
+        &self,
+        endpoint: &str,
+        xml_body: &str,
+    ) -> Result<Response> {
+        let session_id = self.authenticate_internal().await?;
+        let url = format!("{}/{}", self.config.base_url, endpoint);
+        Ok(self
+            .http_client
+            .post(&url)
+            .query(&[("key", session_id.as_str())])
+            .header("Content-Type", "application/xml")
+            .body(xml_body.to_string())
+            .send()
+            .await?)
+    }
+
+    /// Sends an explicitly read-only XML RPC and retries it once after an expired session.
+    ///
+    /// Callers must not use this for create/update/delete/process methods: replaying a mutating
+    /// POST after an ambiguous response can duplicate the mutation. The ordinary `post_xml`
+    /// intentionally remains non-retrying for that reason.
+    pub async fn post_xml_readonly(&self, endpoint: &str, xml_body: &str) -> Result<String> {
+        let _guard = self.request_mutex.lock().await;
+        let mut response = self.send_authenticated_post_xml(endpoint, xml_body).await?;
+        if response.status() == StatusCode::UNAUTHORIZED {
+            self.invalidate_session().await;
+            response = self.send_authenticated_post_xml(endpoint, xml_body).await?;
+            if response.status() == StatusCode::UNAUTHORIZED {
+                self.invalidate_session().await;
+            }
+        }
+
+        let status = response.status();
+        if !status.is_success() {
+            let error_text = response.text().await.unwrap_or_default();
+            return Err(Self::handle_error_response(status, error_text));
+        }
         Ok(response.text().await?)
     }
 
@@ -495,5 +540,51 @@ mod tests {
         );
         assert_eq!(requests.len(), 4);
         assert!(client.session_id.read().await.is_none());
+    }
+
+    #[tokio::test]
+    async fn logout_without_a_session_does_not_authenticate() {
+        let client = client("http://127.0.0.1:1".to_string());
+
+        assert_eq!(client.logout_if_authenticated().await.unwrap(), None);
+        assert_eq!(client.logout().await.unwrap(), "");
+    }
+
+    #[tokio::test]
+    async fn readonly_xml_post_reauthenticates_once() {
+        let (base_url, server) = spawn_mock_server(vec![
+            MockResponse {
+                status: "200 OK",
+                body: "expired-session",
+            },
+            MockResponse {
+                status: "401 Unauthorized",
+                body: "expired",
+            },
+            MockResponse {
+                status: "200 OK",
+                body: "fresh-session",
+            },
+            MockResponse {
+                status: "200 OK",
+                body: "<result><status>SUCCESS</status></result>",
+            },
+        ])
+        .await;
+
+        let result = client(base_url)
+            .post_xml_readonly("v3/ReadService.getValue", "<request/>")
+            .await
+            .unwrap();
+        let requests = server.await.unwrap();
+
+        assert_eq!(result, "<result><status>SUCCESS</status></result>");
+        assert!(requests[1].starts_with("POST /v3/ReadService.getValue?key=expired-session "));
+        assert!(requests[3].starts_with("POST /v3/ReadService.getValue?key=fresh-session "));
+        assert!(
+            requests[1]
+                .to_ascii_lowercase()
+                .contains("content-type: application/xml")
+        );
     }
 }
