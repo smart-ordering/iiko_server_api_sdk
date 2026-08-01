@@ -119,6 +119,12 @@ impl IikoClient {
             .await?;
 
         let status = response.status();
+        if status == StatusCode::UNAUTHORIZED {
+            // The server no longer recognizes the token, so it cannot own a live licensed
+            // session. Clearing it locally is the safe idempotent logout outcome.
+            self.invalidate_session().await;
+            return Ok(None);
+        }
         if !status.is_success() {
             let error_text = response.text().await.unwrap_or_default();
             return Err(IikoError::Api(format!(
@@ -242,7 +248,7 @@ impl IikoClient {
     /// Callers must not use this for create/update/delete/process methods: replaying a mutating
     /// POST after an ambiguous response can duplicate the mutation. The ordinary `post_xml`
     /// intentionally remains non-retrying for that reason.
-    pub async fn post_xml_readonly(&self, endpoint: &str, xml_body: &str) -> Result<String> {
+    pub(crate) async fn post_xml_readonly(&self, endpoint: &str, xml_body: &str) -> Result<String> {
         let _guard = self.request_mutex.lock().await;
         let mut response = self.send_authenticated_post_xml(endpoint, xml_body).await?;
         if response.status() == StatusCode::UNAUTHORIZED {
@@ -548,6 +554,27 @@ mod tests {
 
         assert_eq!(client.logout_if_authenticated().await.unwrap(), None);
         assert_eq!(client.logout().await.unwrap(), "");
+    }
+
+    #[tokio::test]
+    async fn logout_treats_an_expired_session_as_already_released() {
+        let (base_url, server) = spawn_mock_server(vec![
+            MockResponse {
+                status: "200 OK",
+                body: "expired-session",
+            },
+            MockResponse {
+                status: "401 Unauthorized",
+                body: "expired",
+            },
+        ])
+        .await;
+        let client = client(base_url);
+        client.authenticate().await.unwrap();
+
+        assert_eq!(client.logout_if_authenticated().await.unwrap(), None);
+        assert!(client.session_id.read().await.is_none());
+        assert_eq!(server.await.unwrap().len(), 2);
     }
 
     #[tokio::test]
