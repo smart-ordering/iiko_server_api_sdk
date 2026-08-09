@@ -21,6 +21,13 @@ struct StoreReportItemsResponse {
     items: Vec<StoreReportItemDto>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename = "ingredientEntryDtoes")]
+struct IngredientEntryItemsResponse {
+    #[serde(rename = "ingredientEntryDto", alias = "item", default)]
+    items: Vec<IngredientEntryDto>,
+}
+
 pub struct ReportsEndpoint<'a> {
     client: &'a IikoClient,
 }
@@ -960,17 +967,17 @@ impl<'a> ReportsEndpoint<'a> {
             .get_with_params("reports/ingredientEntry", &params)
             .await?;
 
-        // XML может быть списком элементов или одним элементом
-        let items: Vec<IngredientEntryDto> =
-            match from_str::<Vec<IngredientEntryDto>>(&response_xml) {
-                Ok(list) => list,
-                Err(_) => {
-                    // Пробуем как один элемент
-                    let item: IngredientEntryDto = from_str(&response_xml)?;
-                    vec![item]
-                }
-            };
-        Ok(items)
+        parse_ingredient_entries(&response_xml)
+    }
+}
+
+fn parse_ingredient_entries(response_xml: &str) -> Result<Vec<IngredientEntryDto>> {
+    if response_xml.contains("<ingredientEntryDtoes") {
+        return Ok(from_str::<IngredientEntryItemsResponse>(response_xml)?.items);
+    }
+    match from_str::<Vec<IngredientEntryDto>>(response_xml) {
+        Ok(items) => Ok(items),
+        Err(_) => Ok(vec![from_str::<IngredientEntryDto>(response_xml)?]),
     }
 }
 
@@ -984,5 +991,21 @@ mod store_report_tests {
         let response: StoreReportItemsResponse = from_str(xml).unwrap();
         assert_eq!(response.items.len(), 1);
         assert_eq!(response.items[0].sum, Some(12.5));
+    }
+
+    #[test]
+    fn parses_empty_ingredient_entry_wrapper_as_no_evidence() {
+        let items = parse_ingredient_entries("<ingredientEntryDtoes/>").unwrap();
+        assert!(items.is_empty());
+    }
+
+    #[test]
+    fn parses_ingredient_entry_wrapper_rows() {
+        let xml = r#"<ingredientEntryDtoes><ingredientEntryDto><name>Тесто</name><treeLevel>1</treeLevel><productInDishCost>125.5</productInDishCost></ingredientEntryDto><ingredientEntryDto><name>Мука</name><treeLevel>2</treeLevel></ingredientEntryDto></ingredientEntryDtoes>"#;
+        let items = parse_ingredient_entries(xml).unwrap();
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0].name.as_deref(), Some("Тесто"));
+        assert_eq!(items[0].tree_level, 1);
+        assert_eq!(items[0].product_in_dish_cost, Some(125.5));
     }
 }
