@@ -21,6 +21,7 @@ pub mod employees;
 pub mod entities;
 pub mod events;
 pub mod images;
+pub mod internal_read;
 pub mod inventory;
 pub mod product_scales;
 pub mod production_order_blanks;
@@ -89,6 +90,8 @@ pub use assembly_charts::{
 
 // Re-export images types
 pub use images::{IdListDto, ImageDto, ImageOperationResult, ImageSaveRequest};
+
+pub use internal_read::{InternalReadResult, InternalXmlNode};
 
 // Re-export product scales types
 pub use product_scales::{

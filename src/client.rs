@@ -194,6 +194,39 @@ impl IikoClient {
         Ok(response.text().await?)
     }
 
+    /// Sends an allowlisted read-only GET with an explicit response-size ceiling.
+    ///
+    /// This is crate-private for the same reason as the bounded XML helper: public endpoint
+    /// modules, rather than callers, own the route allowlist and input constraints.
+    pub(crate) async fn get_readonly_bounded(
+        &self,
+        endpoint: &str,
+        params: &[(&str, &str)],
+        max_response_bytes: usize,
+    ) -> Result<String> {
+        if max_response_bytes == 0 {
+            return Err(IikoError::Configuration(
+                "read-only response limit must be greater than zero".to_string(),
+            ));
+        }
+        let _guard = self.request_mutex.lock().await;
+        let mut response = self.send_authenticated_get(endpoint, params).await?;
+        if response.status() == StatusCode::UNAUTHORIZED {
+            self.invalidate_session().await;
+            response = self.send_authenticated_get(endpoint, params).await?;
+            if response.status() == StatusCode::UNAUTHORIZED {
+                self.invalidate_session().await;
+            }
+        }
+
+        let status = response.status();
+        let response_text = read_response_text_bounded(response, max_response_bytes).await?;
+        if !status.is_success() {
+            return Err(Self::handle_error_response(status, response_text));
+        }
+        Ok(response_text)
+    }
+
     pub async fn get(&self, endpoint: &str) -> Result<String> {
         // Последовательное выполнение запросов согласно требованиям iiko API
         let _guard = self.request_mutex.lock().await;
@@ -243,12 +276,21 @@ impl IikoClient {
             .await?)
     }
 
-    /// Sends an explicitly read-only XML RPC and retries it once after an expired session.
+    /// Sends an allowlisted read-only XML RPC with an explicit response-size ceiling.
     ///
-    /// Callers must not use this for create/update/delete/process methods: replaying a mutating
-    /// POST after an ambiguous response can duplicate the mutation. The ordinary `post_xml`
-    /// intentionally remains non-retrying for that reason.
-    pub(crate) async fn post_xml_readonly(&self, endpoint: &str, xml_body: &str) -> Result<String> {
+    /// This remains crate-private so applications cannot expose it as a generic XML proxy.
+    /// Public endpoint modules own the method allowlist and request bounds.
+    pub(crate) async fn post_xml_readonly_bounded(
+        &self,
+        endpoint: &str,
+        xml_body: &str,
+        max_response_bytes: usize,
+    ) -> Result<String> {
+        if max_response_bytes == 0 {
+            return Err(IikoError::Configuration(
+                "read-only XML response limit must be greater than zero".to_string(),
+            ));
+        }
         let _guard = self.request_mutex.lock().await;
         let mut response = self.send_authenticated_post_xml(endpoint, xml_body).await?;
         if response.status() == StatusCode::UNAUTHORIZED {
@@ -260,11 +302,11 @@ impl IikoClient {
         }
 
         let status = response.status();
+        let response_text = read_response_text_bounded(response, max_response_bytes).await?;
         if !status.is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            return Err(Self::handle_error_response(status, error_text));
+            return Err(Self::handle_error_response(status, response_text));
         }
-        Ok(response.text().await?)
+        Ok(response_text)
     }
 
     pub async fn put_xml(&self, endpoint: &str, xml_body: &str) -> Result<String> {
@@ -394,6 +436,37 @@ impl IikoClient {
         let mut session = self.session_id.write().await;
         *session = None;
     }
+}
+
+async fn read_response_text_bounded(
+    mut response: Response,
+    max_response_bytes: usize,
+) -> Result<String> {
+    if response
+        .content_length()
+        .is_some_and(|length| length > max_response_bytes as u64)
+    {
+        return Err(IikoError::Api(format!(
+            "read-only response exceeds {max_response_bytes} bytes"
+        )));
+    }
+
+    let mut body = Vec::with_capacity(
+        response
+            .content_length()
+            .unwrap_or_default()
+            .min(max_response_bytes as u64) as usize,
+    );
+    while let Some(chunk) = response.chunk().await? {
+        if body.len().saturating_add(chunk.len()) > max_response_bytes {
+            return Err(IikoError::Api(format!(
+                "read-only response exceeds {max_response_bytes} bytes"
+            )));
+        }
+        body.extend_from_slice(&chunk);
+    }
+    String::from_utf8(body)
+        .map_err(|_| IikoError::Api("read-only response is not valid UTF-8".to_string()))
 }
 
 #[cfg(test)]
@@ -600,7 +673,7 @@ mod tests {
         .await;
 
         let result = client(base_url)
-            .post_xml_readonly("v3/ReadService.getValue", "<request/>")
+            .post_xml_readonly_bounded("v3/ReadService.getValue", "<request/>", 1024)
             .await
             .unwrap();
         let requests = server.await.unwrap();
@@ -613,5 +686,86 @@ mod tests {
                 .to_ascii_lowercase()
                 .contains("content-type: application/xml")
         );
+    }
+
+    #[tokio::test]
+    async fn bounded_readonly_get_reauthenticates_and_preserves_params() {
+        let (base_url, server) = spawn_mock_server(vec![
+            MockResponse {
+                status: "200 OK",
+                body: "expired-session",
+            },
+            MockResponse {
+                status: "401 Unauthorized",
+                body: "expired",
+            },
+            MockResponse {
+                status: "200 OK",
+                body: "fresh-session",
+            },
+            MockResponse {
+                status: "200 OK",
+                body: "payload",
+            },
+        ])
+        .await;
+
+        let result = client(base_url)
+            .get_readonly_bounded("resource", &[("revisionFrom", "42")], 16)
+            .await
+            .unwrap();
+        let requests = server.await.unwrap();
+
+        assert_eq!(result, "payload");
+        assert!(requests[1].contains("key=expired-session"));
+        assert!(requests[1].contains("revisionFrom=42"));
+        assert!(requests[3].contains("key=fresh-session"));
+        assert!(requests[3].contains("revisionFrom=42"));
+    }
+
+    #[tokio::test]
+    async fn bounded_readonly_get_rejects_oversized_response() {
+        let (base_url, server) = spawn_mock_server(vec![
+            MockResponse {
+                status: "200 OK",
+                body: "session",
+            },
+            MockResponse {
+                status: "200 OK",
+                body: "0123456789",
+            },
+        ])
+        .await;
+
+        let error = client(base_url)
+            .get_readonly_bounded("resource", &[], 9)
+            .await
+            .unwrap_err();
+
+        assert!(error.to_string().contains("exceeds 9 bytes"));
+        assert_eq!(server.await.unwrap().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn readonly_xml_post_rejects_oversized_response() {
+        let (base_url, server) = spawn_mock_server(vec![
+            MockResponse {
+                status: "200 OK",
+                body: "session",
+            },
+            MockResponse {
+                status: "200 OK",
+                body: "0123456789",
+            },
+        ])
+        .await;
+
+        let error = client(base_url)
+            .post_xml_readonly_bounded("v3/ReadService.getValue", "<request/>", 9)
+            .await
+            .unwrap_err();
+
+        assert!(error.to_string().contains("exceeds 9 bytes"));
+        assert_eq!(server.await.unwrap().len(), 2);
     }
 }

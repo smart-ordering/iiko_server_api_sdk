@@ -6,6 +6,7 @@ pub mod xml;
 
 pub use client::IikoClient;
 pub use config::IikoConfig;
+pub use endpoints::{AnalyticalEntityKind, InternalDocumentKind};
 pub use error::{IikoError, Result};
 
 // Re-export commonly used types
@@ -26,10 +27,10 @@ pub use xml::response::{
     IncomingInventoryItems, IncomingInventoryValidationResultDto,
     IncomingInventoryValidationResultItemDto, IncomingInventoryValidationResultItems,
     IncomingInvoiceDto, IncomingInvoiceItemDto, IncomingInvoiceItems, IngredientEntryDto,
-    InternalTransferDto, InternalTransferItemDto, InternalTransferListResult,
-    InternalTransferOperationResult, InventoryItemStatus, KeyValue, KeyValueEntry, OlapColumnInfo,
-    OlapColumns, OlapFieldValue, OlapFilter, OlapReportRequest, OlapReportResponse, OlapReportType,
-    OlapReportTypeV1, OrderServiceType, OutgoingInvoiceDto, OutgoingInvoiceItemDto,
+    InternalReadResult, InternalTransferDto, InternalTransferItemDto, InternalTransferListResult,
+    InternalTransferOperationResult, InternalXmlNode, InventoryItemStatus, KeyValue, KeyValueEntry,
+    OlapColumnInfo, OlapColumns, OlapFieldValue, OlapFilter, OlapReportRequest, OlapReportResponse,
+    OlapReportType, OlapReportTypeV1, OrderServiceType, OutgoingInvoiceDto, OutgoingInvoiceItemDto,
     OutgoingInvoiceItems, PeriodType, PreparedChartDto, PreparedChartItemDto, ProductDto,
     ProductGroupDto, ProductOperationResult, ProductProductScaleRequest, ProductScaleDto,
     ProductScaleOperationResult, ProductScaleSaveRequest, ProductScaleUpdateRequest,
@@ -47,9 +48,14 @@ pub use xml::response::{
 
 use endpoints::{
     AssemblyChartsEndpoint, AuthEndpoint, CorporationEndpoint, DocumentsEndpoint,
-    EmployeesEndpoint, EntitiesEndpoint, EventsEndpoint, ImagesEndpoint, InventoryEndpoint,
-    ProductScalesEndpoint, ProductionOrderBlanksEndpoint, ProductsEndpoint, ReplicationEndpoint,
-    ReportsEndpoint, SuppliersEndpoint,
+    EmployeesEndpoint, EntitiesEndpoint, EventsEndpoint, ImagesEndpoint,
+    InternalCashSessionsEndpoint, InternalCostHistoryEndpoint, InternalDocumentIndexEndpoint,
+    InternalDocumentsEndpoint, InternalEntityChangesEndpoint, InternalHistoricalStockEndpoint,
+    InternalLineSalesEndpoint, InternalPriceHistoryEndpoint, InternalProductionTraceEndpoint,
+    InternalRecipeGraphEndpoint, InternalSalesEventsEndpoint, InternalStockMovementsEndpoint,
+    InternalSupplierHistoryEndpoint, InventoryEndpoint, ProductScalesEndpoint,
+    ProductionOrderBlanksEndpoint, ProductsEndpoint, ReplicationEndpoint, ReportsEndpoint,
+    SuppliersEndpoint,
 };
 
 impl IikoClient {
@@ -95,6 +101,61 @@ impl IikoClient {
 
     pub fn images(&self) -> ImagesEndpoint<'_> {
         ImagesEndpoint::new(self)
+    }
+
+    /// Allowlisted internal document read models. This is not a generic v3 proxy.
+    pub fn internal_documents(&self) -> InternalDocumentsEndpoint<'_> {
+        InternalDocumentsEndpoint::new(self)
+    }
+
+    /// Allowlisted historical stock read models with bounded date inputs.
+    pub fn internal_historical_stock(&self) -> InternalHistoricalStockEndpoint<'_> {
+        InternalHistoricalStockEndpoint::new(self)
+    }
+
+    /// Allowlisted line-level sales reads by stable identifiers only.
+    pub fn internal_line_sales(&self) -> InternalLineSalesEndpoint<'_> {
+        InternalLineSalesEndpoint::new(self)
+    }
+
+    pub fn internal_document_index(&self) -> InternalDocumentIndexEndpoint<'_> {
+        InternalDocumentIndexEndpoint::new(self)
+    }
+
+    pub fn internal_stock_movements(&self) -> InternalStockMovementsEndpoint<'_> {
+        InternalStockMovementsEndpoint::new(self)
+    }
+
+    pub fn internal_sales_events(&self) -> InternalSalesEventsEndpoint<'_> {
+        InternalSalesEventsEndpoint::new(self)
+    }
+
+    pub fn internal_cash_sessions(&self) -> InternalCashSessionsEndpoint<'_> {
+        InternalCashSessionsEndpoint::new(self)
+    }
+
+    pub fn internal_cost_history(&self) -> InternalCostHistoryEndpoint<'_> {
+        InternalCostHistoryEndpoint::new(self)
+    }
+
+    pub fn internal_recipe_graph(&self) -> InternalRecipeGraphEndpoint<'_> {
+        InternalRecipeGraphEndpoint::new(self)
+    }
+
+    pub fn internal_price_history(&self) -> InternalPriceHistoryEndpoint<'_> {
+        InternalPriceHistoryEndpoint::new(self)
+    }
+
+    pub fn internal_supplier_history(&self) -> InternalSupplierHistoryEndpoint<'_> {
+        InternalSupplierHistoryEndpoint::new(self)
+    }
+
+    pub fn internal_production_trace(&self) -> InternalProductionTraceEndpoint<'_> {
+        InternalProductionTraceEndpoint::new(self)
+    }
+
+    pub fn internal_entity_changes(&self) -> InternalEntityChangesEndpoint<'_> {
+        InternalEntityChangesEndpoint::new(self)
     }
 
     pub fn product_scales(&self) -> ProductScalesEndpoint<'_> {

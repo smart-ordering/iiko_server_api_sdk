@@ -11,7 +11,15 @@ use crate::xml::response::{
     OlapReportResponse, OlapReportType, OlapReportTypeV1,
 };
 use quick_xml::de::from_str;
+use serde::Deserialize;
 use serde_json;
+
+#[derive(Debug, Deserialize)]
+#[serde(rename = "storeReportItemDtoes")]
+struct StoreReportItemsResponse {
+    #[serde(rename = "storeReportItemDto", default)]
+    items: Vec<StoreReportItemDto>,
+}
 
 pub struct ReportsEndpoint<'a> {
     client: &'a IikoClient,
@@ -680,7 +688,14 @@ impl<'a> ReportsEndpoint<'a> {
             .get_with_params("reports/storeOperations", &params)
             .await?;
 
-        // XML может быть списком элементов или одним элементом
+        // iiko returns the normal payload wrapped in <storeReportItemDtoes>.
+        // Keep the legacy list/single-item fallbacks for older server versions,
+        // but never turn a wrapper parse failure into one silent empty row.
+        if let Ok(response) = from_str::<StoreReportItemsResponse>(&response_xml) {
+            return Ok(response.items);
+        }
+
+        // XML may also be a list of elements or one element on older servers.
         let items: Vec<StoreReportItemDto> =
             match from_str::<Vec<StoreReportItemDto>>(&response_xml) {
                 Ok(list) => list,
@@ -956,5 +971,18 @@ impl<'a> ReportsEndpoint<'a> {
                 }
             };
         Ok(items)
+    }
+}
+
+#[cfg(test)]
+mod store_report_tests {
+    use super::*;
+
+    #[test]
+    fn parses_iiko_store_report_wrapper_without_silent_empty_row() {
+        let xml = r#"<storeReportItemDtoes><storeReportItemDto><sum>12.5</sum><date>03.08.2026</date><type>INVOICE</type><incoming>true</incoming><documentType>INCOMING_INVOICE</documentType><documentId>11111111-1111-1111-1111-111111111111</documentId></storeReportItemDto></storeReportItemDtoes>"#;
+        let response: StoreReportItemsResponse = from_str(xml).unwrap();
+        assert_eq!(response.items.len(), 1);
+        assert_eq!(response.items[0].sum, Some(12.5));
     }
 }

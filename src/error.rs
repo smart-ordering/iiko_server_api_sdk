@@ -11,6 +11,9 @@ pub enum IikoError {
     #[error("XML serialization error: {0}")]
     XmlSerialization(#[from] quick_xml::SeError),
 
+    #[error("XML parsing error: {0}")]
+    XmlParsing(String),
+
     #[error("JSON serialization error: {0}")]
     JsonSerialization(#[from] serde_json::Error),
 

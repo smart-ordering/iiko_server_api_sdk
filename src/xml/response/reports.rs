@@ -733,6 +733,8 @@ pub enum StoreTransactionType {
     SalesReturnWriteoff,
     Disassemble,
     ImportedBankStatement,
+    #[serde(other)]
+    Unknown,
 }
 
 /// Тип документа для отчетов по складским операциям
@@ -763,6 +765,8 @@ pub enum StoreDocumentType {
     Payroll,
     OutgoingCashOrder,
     IncomingCashOrder,
+    #[serde(other)]
+    Unknown,
 }
 
 /// Направление данных для отчетов по складским операциям

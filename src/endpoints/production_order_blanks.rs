@@ -10,6 +10,7 @@ use crate::xml::response::production_order_blanks::ProductionOrderBlankServerRes
 
 const ENTITY_TYPE: &str = "ProductionOrderBlank";
 const DETAIL_BATCH_SIZE: usize = 50;
+const DETAIL_RESPONSE_BYTES: usize = 4 * 1024 * 1024;
 
 pub struct ProductionOrderBlanksEndpoint<'a> {
     client: &'a IikoClient,
@@ -55,9 +56,10 @@ impl<'a> ProductionOrderBlanksEndpoint<'a> {
         for batch in unique_ids.chunks(DETAIL_BATCH_SIZE) {
             let response = self
                 .client
-                .post_xml_readonly(
+                .post_xml_readonly_bounded(
                     "v3/EntitiesService.getEntitiesByIds",
                     &build_entity_ids_request(batch),
+                    DETAIL_RESPONSE_BYTES,
                 )
                 .await?;
             blanks.extend(parse_server_result(&response)?);

@@ -167,11 +167,16 @@ struct SupplierPriceListEnvelope {
     items: Vec<SupplierPriceListItemDto>,
 }
 
-fn parse_supplier_pricelist_response(xml: &str) -> Result<Vec<SupplierPriceListItemDto>> {
+pub(crate) fn parse_supplier_pricelist_response(
+    xml: &str,
+) -> Result<Vec<SupplierPriceListItemDto>> {
     // iiko встречается как с wrapper-элементом, так и с одиночным supplierPriceListItemDto.
     let has_supplier_pricelist_wrapper = xml.contains("<supplierPriceList>")
         || xml.contains("<supplierPriceList ")
-        || xml.contains("</supplierPriceList>");
+        || xml.contains("</supplierPriceList>")
+        || xml.contains("<supplierPriceListItemDtoes>")
+        || xml.contains("<supplierPriceListItemDtoes ")
+        || xml.contains("</supplierPriceListItemDtoes>");
 
     if let Ok(wrapper) = from_str::<SupplierPriceListEnvelope>(xml)
         && (has_supplier_pricelist_wrapper || !wrapper.items.is_empty())
@@ -250,6 +255,15 @@ mod tests {
     #[test]
     fn parses_empty_supplier_pricelist_wrapper() {
         let xml = r#"<supplierPriceList></supplierPriceList>"#;
+
+        let items = parse_supplier_pricelist_response(xml).expect("empty wrapper XML should parse");
+
+        assert!(items.is_empty());
+    }
+
+    #[test]
+    fn parses_server_plural_empty_supplier_pricelist_wrapper() {
+        let xml = r#"<supplierPriceListItemDtoes></supplierPriceListItemDtoes>"#;
 
         let items = parse_supplier_pricelist_response(xml).expect("empty wrapper XML should parse");
 
