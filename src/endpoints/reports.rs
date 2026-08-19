@@ -14,6 +14,8 @@ use quick_xml::de::from_str;
 use serde::Deserialize;
 use serde_json;
 
+const EGAIS_MARKS_RESPONSE_BYTES: usize = 64 * 1024 * 1024;
+
 #[derive(Debug, Deserialize)]
 #[serde(rename = "storeReportItemDtoes")]
 struct StoreReportItemsResponse {
@@ -169,7 +171,11 @@ impl<'a> ReportsEndpoint<'a> {
 
         let response_json = self
             .client
-            .get_with_params("v2/reports/egais/marks/list", &params)
+            .get_readonly_bounded(
+                "v2/reports/egais/marks/list",
+                &params,
+                EGAIS_MARKS_RESPONSE_BYTES,
+            )
             .await?;
 
         let marks_list: EgaisMarksList = serde_json::from_str(&response_json)?;

@@ -5,6 +5,8 @@ use quick_xml::de::from_str;
 use quick_xml::se::to_string;
 use uuid::Uuid;
 
+const EMPLOYEES_RESPONSE_BYTES: usize = 8 * 1024 * 1024;
+
 pub struct EmployeesEndpoint<'a> {
     client: &'a IikoClient,
 }
@@ -92,9 +94,13 @@ impl<'a> EmployeesEndpoint<'a> {
 
         let endpoint = format!("employees/byDepartment/{}", department_code);
         let response_xml = if params.is_empty() {
-            self.client.get(&endpoint).await?
+            self.client
+                .get_readonly_bounded(&endpoint, &[], EMPLOYEES_RESPONSE_BYTES)
+                .await?
         } else {
-            self.client.get_with_params(&endpoint, &params).await?
+            self.client
+                .get_readonly_bounded(&endpoint, &params, EMPLOYEES_RESPONSE_BYTES)
+                .await?
         };
 
         let wrapper: Employees = from_str(&response_xml)?;
