@@ -473,7 +473,7 @@ pub struct DeliveryCourierMetrics {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeliveryCourierMetric {
     /// Сдвоенные заказы
-    #[serde(rename = "doubledOrders")]
+    #[serde(rename = "doubleOrders", alias = "doubledOrders")]
     pub doubled_orders: f64,
     /// Тип метрики
     #[serde(rename = "metricType")]
@@ -488,7 +488,7 @@ pub struct DeliveryCourierMetric {
     #[serde(rename = "totalTime")]
     pub total_time: f64,
     /// Строенные заказы
-    #[serde(rename = "tripledOrders")]
+    #[serde(rename = "tripleOrders", alias = "tripledOrders")]
     pub tripled_orders: f64,
 }
 
@@ -1120,4 +1120,30 @@ pub struct IngredientEntryDto {
     /// Наименование единицы измерения
     #[serde(rename = "unit", default)]
     pub unit: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::DeliveryCouriersReport;
+    use quick_xml::de::from_str;
+
+    #[test]
+    fn delivery_courier_metric_accepts_live_double_and_triple_order_tags() {
+        let report: DeliveryCouriersReport = from_str(
+            r#"<report><rows><row><courier>redacted</courier><metrics><metric><doubleOrders>2</doubleOrders><metricType>AVERAGE</metricType><onTheWayTime>11.5</onTheWayTime><orderCount>7</orderCount><totalTime>23.5</totalTime><tripleOrders>1</tripleOrders></metric></metrics></row></rows></report>"#,
+        )
+        .unwrap();
+        let metric = &report.rows.rows[0].metrics.metrics[0];
+        assert_eq!(metric.doubled_orders, 2.0);
+        assert_eq!(metric.tripled_orders, 1.0);
+    }
+
+    #[test]
+    fn delivery_courier_metric_keeps_legacy_tag_aliases() {
+        let report: DeliveryCouriersReport = from_str(
+            r#"<report><rows><row><courier>redacted</courier><metrics><metric><doubledOrders>2</doubledOrders><metricType>AVERAGE</metricType><onTheWayTime>11.5</onTheWayTime><orderCount>7</orderCount><totalTime>23.5</totalTime><tripledOrders>1</tripledOrders></metric></metrics></row></rows></report>"#,
+        )
+        .unwrap();
+        assert_eq!(report.rows.rows[0].metrics.metrics.len(), 1);
+    }
 }
