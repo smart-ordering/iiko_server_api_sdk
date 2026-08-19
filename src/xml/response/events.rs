@@ -15,7 +15,7 @@ pub struct EventsList {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Event {
     /// Уникальный идентификатор события (guid)
-    #[serde(rename = "id", default)]
+    #[serde(rename = "id", default, deserialize_with = "uuid_or_none")]
     pub id: Option<Uuid>,
     /// Дата и время события
     #[serde(rename = "date", default)]
@@ -24,11 +24,19 @@ pub struct Event {
     #[serde(rename = "type", default)]
     pub r#type: Option<String>,
     /// ID департамента (guid) - для iikoChain
-    #[serde(rename = "departmentId", default)]
+    #[serde(rename = "departmentId", default, deserialize_with = "uuid_or_none")]
     pub department_id: Option<Uuid>,
     /// Список атрибутов события
     #[serde(rename = "attribute", default)]
     pub attributes: Vec<EventAttribute>,
+}
+
+fn uuid_or_none<'de, D>(deserializer: D) -> Result<Option<Uuid>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = Option::<String>::deserialize(deserializer)?;
+    Ok(value.and_then(|value| Uuid::parse_str(value.trim()).ok()))
 }
 
 /// Атрибут события
@@ -119,4 +127,23 @@ pub struct CashSession {
 pub struct CashSessionsList {
     #[serde(rename = "session", default)]
     pub sessions: Vec<CashSession>,
+}
+
+#[cfg(test)]
+mod tests {
+    use quick_xml::de::from_str;
+
+    use super::*;
+
+    #[test]
+    fn events_tolerate_legacy_non_uuid_identifiers() {
+        let events: EventsList = from_str(
+            r#"<eventsList><event><id>1</id><departmentId>2</departmentId><type>OPEN</type></event></eventsList>"#,
+        )
+        .unwrap();
+        assert_eq!(events.events.len(), 1);
+        assert_eq!(events.events[0].id, None);
+        assert_eq!(events.events[0].department_id, None);
+        assert_eq!(events.events[0].r#type.as_deref(), Some("OPEN"));
+    }
 }
