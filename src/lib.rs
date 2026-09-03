@@ -49,13 +49,13 @@ pub use xml::response::{
 use endpoints::{
     AssemblyChartsEndpoint, AuthEndpoint, CorporationEndpoint, DocumentsEndpoint,
     EmployeesEndpoint, EntitiesEndpoint, EventsEndpoint, ImagesEndpoint,
-    InternalCashSessionsEndpoint, InternalCostHistoryEndpoint, InternalDocumentIndexEndpoint,
-    InternalDocumentsEndpoint, InternalEntityChangesEndpoint, InternalHistoricalStockEndpoint,
-    InternalLineSalesEndpoint, InternalPriceHistoryEndpoint, InternalProductionTraceEndpoint,
-    InternalRecipeGraphEndpoint, InternalSalesEventsEndpoint, InternalStockMovementsEndpoint,
-    InternalSupplierHistoryEndpoint, InventoryEndpoint, ProductScalesEndpoint,
-    ProductionOrderBlanksEndpoint, ProductsEndpoint, ReplicationEndpoint, ReportsEndpoint,
-    SuppliersEndpoint,
+    InternalCashSessionsEndpoint, InternalCorporationEndpoint, InternalCostHistoryEndpoint,
+    InternalDocumentIndexEndpoint, InternalDocumentsEndpoint, InternalEntityChangesEndpoint,
+    InternalHistoricalStockEndpoint, InternalLineSalesEndpoint, InternalPriceHistoryEndpoint,
+    InternalProductionTraceEndpoint, InternalRecipeGraphEndpoint, InternalSalesEventsEndpoint,
+    InternalStockMovementsEndpoint, InternalSupplierHistoryEndpoint, InventoryEndpoint,
+    ProductScalesEndpoint, ProductionOrderBlanksEndpoint, ProductsEndpoint, ReplicationEndpoint,
+    ReportsEndpoint, SuppliersEndpoint,
 };
 
 impl IikoClient {
@@ -132,6 +132,11 @@ impl IikoClient {
 
     pub fn internal_cash_sessions(&self) -> InternalCashSessionsEndpoint<'_> {
         InternalCashSessionsEndpoint::new(self)
+    }
+
+    /// Read-only identity of the corporation hierarchy served by this RMS node.
+    pub fn internal_corporation(&self) -> InternalCorporationEndpoint<'_> {
+        InternalCorporationEndpoint::new(self)
     }
 
     pub fn internal_cost_history(&self) -> InternalCostHistoryEndpoint<'_> {
