@@ -158,17 +158,27 @@ impl IikoClient {
         endpoint: &str,
         params: &[(&str, &str)],
     ) -> Result<Response> {
+        self.send_authenticated_get_with_timeout(endpoint, params, None)
+            .await
+    }
+
+    async fn send_authenticated_get_with_timeout(
+        &self,
+        endpoint: &str,
+        params: &[(&str, &str)],
+        timeout: Option<std::time::Duration>,
+    ) -> Result<Response> {
         let session_id = self.authenticate_internal().await?;
         let url = format!("{}/{}", self.config.base_url, endpoint);
         let mut query_params = vec![("key", session_id.as_str())];
         query_params.extend(params.iter().copied());
 
-        Ok(self
-            .http_client
-            .get(&url)
-            .query(&query_params)
-            .send()
-            .await?)
+        let request = self.http_client.get(&url).query(&query_params);
+        let request = match timeout {
+            Some(timeout) => request.timeout(timeout),
+            None => request,
+        };
+        Ok(request.send().await?)
     }
 
     async fn authenticated_get_with_single_retry(
@@ -204,16 +214,32 @@ impl IikoClient {
         params: &[(&str, &str)],
         max_response_bytes: usize,
     ) -> Result<String> {
+        self.get_readonly_bounded_with_timeout(endpoint, params, max_response_bytes, None)
+            .await
+    }
+
+    /// Endpoint-owned read timeout; preserves the shared session and serialization gate.
+    pub(crate) async fn get_readonly_bounded_with_timeout(
+        &self,
+        endpoint: &str,
+        params: &[(&str, &str)],
+        max_response_bytes: usize,
+        timeout: Option<std::time::Duration>,
+    ) -> Result<String> {
         if max_response_bytes == 0 {
             return Err(IikoError::Configuration(
                 "read-only response limit must be greater than zero".to_string(),
             ));
         }
         let _guard = self.request_mutex.lock().await;
-        let mut response = self.send_authenticated_get(endpoint, params).await?;
+        let mut response = self
+            .send_authenticated_get_with_timeout(endpoint, params, timeout)
+            .await?;
         if response.status() == StatusCode::UNAUTHORIZED {
             self.invalidate_session().await;
-            response = self.send_authenticated_get(endpoint, params).await?;
+            response = self
+                .send_authenticated_get_with_timeout(endpoint, params, timeout)
+                .await?;
             if response.status() == StatusCode::UNAUTHORIZED {
                 self.invalidate_session().await;
             }
@@ -468,6 +494,10 @@ async fn read_response_text_bounded(
     String::from_utf8(body)
         .map_err(|_| IikoError::Api("read-only response is not valid UTF-8".to_string()))
 }
+
+#[cfg(test)]
+#[path = "client_read_timeout_tests.rs"]
+mod read_timeout_tests;
 
 #[cfg(test)]
 mod tests {

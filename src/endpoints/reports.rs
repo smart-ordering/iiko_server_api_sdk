@@ -1,10 +1,11 @@
+mod product_expense;
+
 use crate::client::IikoClient;
 use crate::error::Result;
 use crate::xml::response::reports::{
-    BudgetPlanItemDto, DayDishValue, DayDishValues, DeliveryConsolidatedReport,
-    DeliveryCouriersReport, DeliveryHalfHourDetailedReport, DeliveryLoyaltyReport,
-    DeliveryOrderCycleReport, DeliveryRegionsReport, IngredientEntryDto, StoreReportItemDto,
-    StoreReportPreset,
+    BudgetPlanItemDto, DayDishValue, DeliveryConsolidatedReport, DeliveryCouriersReport,
+    DeliveryHalfHourDetailedReport, DeliveryLoyaltyReport, DeliveryOrderCycleReport,
+    DeliveryRegionsReport, IngredientEntryDto, StoreReportItemDto, StoreReportPreset,
 };
 use crate::xml::response::{
     BalanceCounteragent, BalanceStore, EgaisMarksList, OlapColumns, OlapReportRequest,
@@ -742,82 +743,6 @@ impl<'a> ReportsEndpoint<'a> {
                 }
             };
         Ok(presets)
-    }
-
-    /// Расход продуктов по продажам
-    ///
-    /// Версия iiko: 3.9
-    /// Endpoint: GET `/reports/productExpense`
-    ///
-    /// # Параметры запроса
-    /// - `department`: Подразделение (GUID)
-    /// - `date_from`: Начальная дата в формате DD.MM.YYYY
-    /// - `date_to`: Конечная дата в формате DD.MM.YYYY
-    /// - `hour_from`: Час начала интервала выборки в сутках (по умолчанию -1, все время)
-    /// - `hour_to`: Час окончания интервала выборки в сутках (по умолчанию -1, все время)
-    ///
-    /// # Что в ответе
-    /// Структура dayDishValue (см. XSD Расход продуктов по продажам)
-    /// - `date`: Дата
-    /// - `productId`: ID продукта
-    /// - `productName`: Название продукта
-    /// - `value`: Значение (количество) в формате decimal
-    pub async fn get_product_expense(
-        &self,
-        department: &str,
-        date_from: &str,
-        date_to: &str,
-        hour_from: Option<i32>,
-        hour_to: Option<i32>,
-    ) -> Result<Vec<DayDishValue>> {
-        let mut params = vec![
-            ("department", department),
-            ("dateFrom", date_from),
-            ("dateTo", date_to),
-        ];
-
-        let hour_from_str;
-        let hour_to_str;
-
-        if let Some(hf) = hour_from {
-            hour_from_str = hf.to_string();
-            params.push(("hourFrom", &hour_from_str));
-        }
-
-        if let Some(ht) = hour_to {
-            hour_to_str = ht.to_string();
-            params.push(("hourTo", &hour_to_str));
-        }
-
-        let response_xml = self
-            .client
-            .get_with_params("reports/productExpense", &params)
-            .await?;
-
-        // XML может быть:
-        // - списком элементов внутри обертки <dayDishValues>
-        // - списком элементов без обертки
-        // - одним элементом <dayDishValue>
-        let items: Vec<DayDishValue> =
-            // Пытаемся сначала распарсить обертку <dayDishValues>...</dayDishValues>
-            if let Ok(wrapper) = from_str::<DayDishValues>(&response_xml) {
-                wrapper.items
-            } else if let Ok(list) = from_str::<Vec<DayDishValue>>(&response_xml) {
-                // Падаем обратно на "голый" список элементов
-                list
-            } else {
-                // И в самом крайнем случае пробуем один элемент
-                let item: DayDishValue = from_str(&response_xml)?;
-                vec![item]
-            };
-        eprintln!(
-            "iiko productExpense response: date_from={}, date_to={}, rows={}, response_bytes={}",
-            date_from,
-            date_to,
-            items.len(),
-            response_xml.len(),
-        );
-        Ok(items)
     }
 
     /// Отчет по выручке
