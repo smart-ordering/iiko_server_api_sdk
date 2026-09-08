@@ -196,7 +196,11 @@ pub struct IncomingInvoiceDto {
     #[serde(rename = "comment", default)]
     pub comment: Option<String>,
     /// Учетный номер документа
-    #[serde(rename = "documentNumber", default)]
+    #[serde(
+        rename = "documentNumber",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub document_number: Option<String>,
     /// Дата документа (формат: dd.MM.yyyy)
     #[serde(
