@@ -257,6 +257,11 @@ pub struct ProductDto {
     pub can_set_open_price: Option<bool>,
     #[serde(rename = "barcodes", default)]
     pub barcodes: Option<Vec<BarcodeDto>>,
+    /// НТИН — код товара в Национальном каталоге товаров Казахстана (13 цифр).
+    /// Поле присутствует только в казахстанских сборках iiko; в остальных
+    /// отсутствует в ответе и не сериализуется, если не задано.
+    #[serde(rename = "ntin", default, skip_serializing_if = "Option::is_none")]
+    pub ntin: Option<String>,
 }
 
 /// Цвет (RGB)
