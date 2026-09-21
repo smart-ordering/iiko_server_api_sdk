@@ -230,6 +230,55 @@ impl<'a> ProductsEndpoint<'a> {
         Ok(result)
     }
 
+    /// Частичное редактирование элемента номенклатуры
+    ///
+    /// В отличие от [`update`](Self::update), в теле запроса передаются только
+    /// поля из `patch` — `ProductDto` сериализует `deleted`, `modifiers` и
+    /// другие поля без `skip_serializing_if`, поэтому полный DTO с пустыми
+    /// значениями затирает данные в iiko. Используйте этот метод, когда нужно
+    /// изменить одно-два поля (например `ntin`).
+    ///
+    /// # Параметры
+    /// - `patch`: JSON-объект с обязательным полем `id` и изменяемыми полями
+    /// - `override_fast_code`: Перегенерировать ли код быстрого поиска (по умолчанию false)
+    /// - `override_nomenclature_code`: Перегенерировать ли артикул (по умолчанию false)
+    pub async fn update_partial(
+        &self,
+        patch: serde_json::Value,
+        override_fast_code: Option<bool>,
+        override_nomenclature_code: Option<bool>,
+    ) -> Result<ProductOperationResult> {
+        if !patch
+            .get("id")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|value| !value.is_empty())
+        {
+            return Err(crate::error::IikoError::BadRequest(
+                "update_partial requires a non-empty `id` field".to_string(),
+            ));
+        }
+
+        let mut params: Vec<(&str, &str)> = Vec::new();
+        if let Some(ovr_fast) = override_fast_code {
+            params.push(("overrideFastCode", if ovr_fast { "true" } else { "false" }));
+        }
+        if let Some(ovr_num) = override_nomenclature_code {
+            params.push((
+                "overrideNomenclatureCode",
+                if ovr_num { "true" } else { "false" },
+            ));
+        }
+
+        let json_body = json_to_string(&patch)?;
+        let response_json = self
+            .client
+            .post_json("v2/entities/products/update", &json_body, &params)
+            .await?;
+
+        let result: ProductOperationResult = serde_json::from_str(&response_json)?;
+        Ok(result)
+    }
+
     /// Удаление элементов номенклатуры
     ///
     /// # Важно:
