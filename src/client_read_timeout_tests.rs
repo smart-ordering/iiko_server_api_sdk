@@ -8,7 +8,7 @@ async fn delayed_server() -> (IikoClient, tokio::task::JoinHandle<Vec<String>>) 
     let address = listener.local_addr().unwrap();
     let server = tokio::spawn(async move {
         let mut requests = Vec::new();
-        for (delay, body) in [(0, "session"), (100, "<dayDishValues/>"), (100, "ordinary")] {
+        for (delay, body) in [(0, "session"), (300, "<dayDishValues/>"), (300, "ordinary")] {
             let (mut socket, _) = listener.accept().await.unwrap();
             let mut data = [0; 4096];
             let n = socket.read(&mut data).await.unwrap();
@@ -24,8 +24,13 @@ async fn delayed_server() -> (IikoClient, tokio::task::JoinHandle<Vec<String>>) 
     });
     let mut client =
         IikoClient::new(IikoConfig::new(format!("http://{address}"), "test", "test")).unwrap();
+    // Authenticate before imposing the short deadline on the requests under test.
+    tokio::time::timeout(Duration::from_secs(5), client.authenticate())
+        .await
+        .unwrap()
+        .unwrap();
     client.http_client = Client::builder()
-        .timeout(Duration::from_millis(30))
+        .timeout(Duration::from_millis(100))
         .build()
         .unwrap();
     (client, server)
