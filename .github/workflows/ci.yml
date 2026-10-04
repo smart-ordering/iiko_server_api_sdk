@@ -1,0 +1,49 @@
+name: SDK CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NO_PROXY: 127.0.0.1,localhost
+      no_proxy: 127.0.0.1,localhost
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      ALL_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      all_proxy: ""
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native TLS and local certificate test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config libssl-dev openssl
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.99.0"
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format check
+        run: cargo fmt --all -- --check
+      - name: Compile every target without executing live iiko tests
+        run: cargo check --locked --all-targets
+      - name: Run library and synthetic wire/transport contracts
+        run: |
+          cargo test --locked --lib \
+            --test incoming_invoice_numbering \
+            --test xml_wire_contract \
+            --test json_wire_contract \
+            --test xml_namespace_security \
+            --test http_auth_contract \
+            --test http_timeouts_reports_contract \
+            --test tls_transport_contract

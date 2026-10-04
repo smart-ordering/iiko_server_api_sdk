@@ -24,7 +24,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         return Err("only the last seven completed days are permitted".into());
     }
     let department: Uuid = std::env::var("IIKO_READ_DEPARTMENT")?.parse()?;
-    let password_hash = format!("{:x}", Sha1::digest(std::env::var("IM_PASS")?.as_bytes()));
+    let password_hash = Sha1::digest(std::env::var("IM_PASS")?.as_bytes())
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
     let client = IikoClient::new(IikoConfig::new(base, "Ailillu", password_hash).with_timeout(45))?;
     let result = async {
         let columns = match client.reports().get_olap_columns(OlapReportType::Sales).await {

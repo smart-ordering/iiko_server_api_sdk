@@ -116,23 +116,19 @@ fn parse_xml_tree(xml: &str) -> Result<InternalXmlNode> {
 
     loop {
         match reader.read_event() {
-            Ok(Event::Start(event)) => stack.push(node_from_start(&reader, &event)?),
+            Ok(Event::Start(event)) => stack.push(node_from_start(&event)?),
             Ok(Event::Empty(event)) => {
-                attach_node(node_from_start(&reader, &event)?, &mut stack, &mut root)?
+                attach_node(node_from_start(&event)?, &mut stack, &mut root)?
             }
             Ok(Event::Text(event)) => {
                 if let Some(node) = stack.last_mut() {
-                    let text = event
-                        .xml_content()
-                        .map_err(|error| IikoError::XmlParsing(error.to_string()))?;
+                    let text = event.xml11_content();
                     append_text(node, text.as_ref());
                 }
             }
             Ok(Event::CData(event)) => {
                 if let Some(node) = stack.last_mut() {
-                    let text = event
-                        .decode()
-                        .map_err(|error| IikoError::XmlParsing(error.to_string()))?;
+                    let text = event.into_inner();
                     append_text(node, text.as_ref());
                 }
             }
@@ -144,9 +140,7 @@ fn parse_xml_tree(xml: &str) -> Result<InternalXmlNode> {
                     {
                         append_text(node, &character.to_string());
                     } else {
-                        let name = event
-                            .decode()
-                            .map_err(|error| IikoError::XmlParsing(error.to_string()))?;
+                        let name = event.into_inner();
                         let value = quick_xml::escape::resolve_xml_entity(name.as_ref())
                             .ok_or_else(|| {
                                 IikoError::XmlParsing(format!("unrecognized XML entity {name}"))
@@ -175,17 +169,13 @@ fn parse_xml_tree(xml: &str) -> Result<InternalXmlNode> {
     root.ok_or_else(|| IikoError::XmlParsing("internal response is empty".to_string()))
 }
 
-fn node_from_start(
-    reader: &Reader<&[u8]>,
-    event: &quick_xml::events::BytesStart<'_>,
-) -> Result<InternalXmlNode> {
-    let name = String::from_utf8_lossy(event.name().as_ref()).into_owned();
+fn node_from_start(event: &quick_xml::events::BytesStart<'_>) -> Result<InternalXmlNode> {
+    let name = event.name().as_ref().to_owned();
     let mut attributes = BTreeMap::new();
     for attribute in event.attributes().with_checks(false) {
         let attribute = attribute.map_err(|error| IikoError::XmlParsing(error.to_string()))?;
-        let key = String::from_utf8_lossy(attribute.key.as_ref()).into_owned();
-        let value = attribute
-            .decode_and_unescape_value(reader.decoder())
+        let key = attribute.key.as_ref().to_owned();
+        let value = quick_xml::escape::unescape(attribute.value.as_ref())
             .map_err(|error| IikoError::XmlParsing(error.to_string()))?;
         attributes.insert(key, value.into_owned());
     }
