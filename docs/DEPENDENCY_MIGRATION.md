@@ -73,8 +73,11 @@ cargo test --locked --lib \
   --test xml_namespace_security \
   --test http_auth_contract \
   --test http_timeouts_reports_contract \
-  --test tls_transport_contract
+  --test tls_transport_contract \
+  -- --test-threads=1
 ```
+
+Timing tests run serially so CPU contention does not consume their deadline headroom.
 
 HTTP/TLS contract processes require proxy variables to be unset/empty and
 NO_PROXY=127.0.0.1,localhost. OpenSSL is required; synthetic certificate keys

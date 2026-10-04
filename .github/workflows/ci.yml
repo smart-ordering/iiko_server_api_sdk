@@ -44,4 +44,5 @@ jobs:
             --test xml_namespace_security \
             --test http_auth_contract \
             --test http_timeouts_reports_contract \
-            --test tls_transport_contract
+            --test tls_transport_contract \
+            -- --test-threads=1

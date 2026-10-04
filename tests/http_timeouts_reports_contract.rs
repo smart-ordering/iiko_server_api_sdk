@@ -103,20 +103,20 @@ async fn report_request_timeout_override_covers_body_and_leaves_other_requests_u
 async fn reqwest_read_timeout_resets_per_chunk_while_total_timeout_does_not() {
     let chunks = || {
         vec![
-            (Duration::from_millis(150), b"one".to_vec()),
-            (Duration::from_millis(150), b"two".to_vec()),
-            (Duration::from_millis(150), b"three".to_vec()),
+            (Duration::from_secs(1), b"one".to_vec()),
+            (Duration::from_secs(1), b"two".to_vec()),
+            (Duration::from_secs(1), b"three".to_vec()),
         ]
     };
     let server = MockServer::start(vec![
         Reply::ok("").body_chunks(chunks()).chunked(),
         Reply::ok("").body_chunks(chunks()).chunked(),
-        Reply::ok("stalled").body_chunks(vec![(Duration::from_millis(500), b"stalled".to_vec())]),
+        Reply::ok("stalled").body_chunks(vec![(Duration::from_secs(3), b"stalled".to_vec())]),
     ])
     .await;
     let client = reqwest::Client::builder()
-        .read_timeout(Duration::from_millis(350))
-        .timeout(Duration::from_secs(2))
+        .read_timeout(Duration::from_secs(2))
+        .timeout(Duration::from_secs(8))
         .build()
         .unwrap();
     assert_eq!(
@@ -132,7 +132,7 @@ async fn reqwest_read_timeout_resets_per_chunk_while_total_timeout_does_not() {
     );
     let error = client
         .get(&server.base_url)
-        .timeout(Duration::from_millis(350))
+        .timeout(Duration::from_secs(2))
         .send()
         .await
         .unwrap()
