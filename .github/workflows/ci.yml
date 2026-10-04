@@ -15,13 +15,9 @@ jobs:
     timeout-minutes: 20
     env:
       NO_PROXY: 127.0.0.1,localhost
-      no_proxy: 127.0.0.1,localhost
       HTTP_PROXY: ""
       HTTPS_PROXY: ""
       ALL_PROXY: ""
-      http_proxy: ""
-      https_proxy: ""
-      all_proxy: ""
     steps:
       - uses: actions/checkout@v4
       - name: Install native TLS and local certificate test dependencies
@@ -39,6 +35,8 @@ jobs:
         run: cargo check --locked --all-targets
       - name: Run library and synthetic wire/transport contracts
         run: |
+          export no_proxy="$NO_PROXY"
+          export http_proxy="" https_proxy="" all_proxy=""
           cargo test --locked --lib \
             --test incoming_invoice_numbering \
             --test xml_wire_contract \
