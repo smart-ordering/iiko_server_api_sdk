@@ -42,9 +42,11 @@ normalization. Numeric character references are unaffected. Ordinary CR/CRLF,
 Unicode names, outer string whitespace, empty/omitted fields, document numbering,
 and ordered item arrays are covered by the shared before/after contract suite.
 
-The new parser also limits in-scope namespace bindings to 128 and rejects
+The typed serde parser also limits in-scope namespace bindings to 128 and rejects
 excessive nesting. These are intentional rejection changes for pathological
 input. SDK invoice tests cover the namespace limit and scope release.
+The custom internal read tree retains its existing byte bound; it does not
+inherit these typed parser namespace/depth limits.
 Quick-xml 0.38's dependency branch is removed, including the versions affected
 by [RUSTSEC-2026-0194](https://rustsec.org/advisories/RUSTSEC-2026-0194.html) and
 [RUSTSEC-2026-0195](https://rustsec.org/advisories/RUSTSEC-2026-0195.html).
