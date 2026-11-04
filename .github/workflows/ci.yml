@@ -38,6 +38,7 @@ jobs:
           export no_proxy="$NO_PROXY"
           export http_proxy="" https_proxy="" all_proxy=""
           cargo test --locked --lib \
+            --test custom_transport \
             --test incoming_invoice_numbering \
             --test xml_wire_contract \
             --test json_wire_contract \
