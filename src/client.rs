@@ -36,12 +36,19 @@ impl IikoClient {
             })?
         };
 
-        Ok(Self {
+        Ok(Self::with_http_client(config, http_client))
+    }
+
+    /// Use an application-owned transport (for example DNS pinning and redirect rejection).
+    /// The supplied client owns timeout, proxy, TLS and redirect policy. Authentication and
+    /// the sequential request/session contract are identical to `new`.
+    pub fn with_http_client(config: IikoConfig, http_client: Client) -> Self {
+        Self {
             config: Arc::new(config),
             http_client,
             session_id: Arc::new(RwLock::new(None)),
             request_mutex: Arc::new(Mutex::new(())),
-        })
+        }
     }
 
     /// Внутренний метод аутентификации (без мьютекса)
