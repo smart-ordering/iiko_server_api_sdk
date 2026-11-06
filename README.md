@@ -132,7 +132,19 @@ cargo test --test integration_test
 - `client.post_form(endpoint, form_data)` - POST с form data (Content-Type: application/x-www-form-urlencoded)
 - `client.post_json(endpoint, json_body, query_params)` - POST с JSON телом (Content-Type: application/json)
 - `client.post_xml(endpoint, xml_body)` - POST с XML телом (Content-Type: application/xml)
+- `client.post_xml_once_bounded(endpoint, xml_body, max_response_bytes)` - один XML POST с ограничением размера успешного и ошибочного ответа до декодирования
 - `client.put_xml(endpoint, xml_body)` - PUT с XML телом (Content-Type: application/xml)
+
+`IikoClient::new` запрещает перенаправления HTTP и автоматические транспортные повторы.
+`post_xml_once_bounded` сохраняет общий mutex SDK на время авторизации, отправки и чтения
+ответа. Он не обновляет авторизацию и не повторяет POST после 401. Лимит ответа должен
+быть больше нуля; проверяются как Content-Length, так и фактически полученные chunks.
+Ошибка после отправки не доказывает отсутствие документа: перед новой попыткой нужно
+сверить результат по стабильному идентификатору операции. Для `with_http_client` вызывающий
+код обязан самостоятельно запретить redirects и retries в переданном HTTP-клиенте.
+Читающий журнал `client.documents().get_documents(...)` ограничивает ответ 4 MiB и
+допускает одно обновление авторизации после 401. Это исключение относится только к
+чтению журнала и не повторяет импорт документов.
 
 ### Обработка ошибок
 

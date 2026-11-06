@@ -23,7 +23,11 @@ pub struct IikoClient {
 impl IikoClient {
     pub fn new(config: IikoConfig) -> Result<Self> {
         // Preserve the 0.12 transport even when a consumer enables other TLS/ALPN features.
-        let builder = Client::builder().tls_backend_native().http1_only();
+        let builder = Client::builder()
+            .tls_backend_native()
+            .http1_only()
+            .redirect(reqwest::redirect::Policy::none())
+            .retry(reqwest::retry::never());
         // Если timeout_secs == 0 — не ставим таймаут на уровне HTTP-клиента (ожидаем, что таймауты обрабатывает вызывающий код)
         let http_client = if config.timeout_secs == 0 {
             builder.build().map_err(|e| {
@@ -40,7 +44,8 @@ impl IikoClient {
     }
 
     /// Use an application-owned transport (for example DNS pinning and redirect rejection).
-    /// The supplied client owns timeout, proxy, TLS and redirect policy. Authentication and
+    /// The supplied client owns timeout, proxy, TLS, redirect and retry policy. Disable
+    /// redirects and transport retries when using it for mutations. Authentication and
     /// the sequential request/session contract are identical to `new`.
     pub fn with_http_client(config: IikoConfig, http_client: Client) -> Self {
         Self {
@@ -294,6 +299,36 @@ impl IikoClient {
         Ok(response.text().await?)
     }
 
+    /// Send one authenticated XML POST while retaining the SDK's sequential request lock.
+    ///
+    /// Bounds successful and error response bodies before UTF-8 decoding or HTTP error
+    /// handling. The response limit must be greater than zero. A 401 does not refresh
+    /// authentication or repeat the POST. Any error can leave a mutation's outcome
+    /// unknown; callers must reconcile its stable identity before another attempt.
+    ///
+    /// `new` disables redirects and transport retries. A client passed to `with_http_client`
+    /// must apply the same policies; this method does not override an injected transport.
+    pub async fn post_xml_once_bounded(
+        &self,
+        endpoint: &str,
+        xml_body: &str,
+        max_response_bytes: usize,
+    ) -> Result<String> {
+        if max_response_bytes == 0 {
+            return Err(IikoError::Configuration(
+                "XML response limit must be greater than zero".to_string(),
+            ));
+        }
+        let _guard = self.request_mutex.lock().await;
+        let response = self.send_authenticated_post_xml(endpoint, xml_body).await?;
+        let status = response.status();
+        let response_text = read_response_text_bounded(response, max_response_bytes).await?;
+        if !status.is_success() {
+            return Err(Self::handle_error_response(status, response_text));
+        }
+        Ok(response_text)
+    }
+
     async fn send_authenticated_post_xml(
         &self,
         endpoint: &str,
@@ -507,6 +542,10 @@ async fn read_response_text_bounded(
 #[cfg(test)]
 #[path = "client_read_timeout_tests.rs"]
 mod read_timeout_tests;
+
+#[cfg(test)]
+#[path = "client_mutation_contract_tests.rs"]
+mod mutation_contract_tests;
 
 #[cfg(test)]
 mod tests {
