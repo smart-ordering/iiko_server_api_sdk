@@ -264,7 +264,7 @@ async fn sdk_rejects_untrusted_certificate_and_redacts_https_auth_credentials() 
 }
 
 #[tokio::test]
-async fn authenticated_https_redirect_rejects_untrusted_cert_without_leaking_or_losing_key() {
+async fn injected_read_redirect_rejects_untrusted_cert_without_leaking_or_losing_key() {
     let tls = TlsServer::start();
     let secret = "synthetic-session-key-must-not-leak";
     let http = MockServer::start(vec![
@@ -273,7 +273,19 @@ async fn authenticated_https_redirect_rejects_untrusted_cert_without_leaking_or_
         Reply::ok("later read"),
     ])
     .await;
-    let client = http.client(2);
+    // A custom transport owns its redirect policy. Enable one redirect explicitly
+    // for this read-only TLS redaction contract; SDK defaults reject it earlier.
+    let transport = reqwest::Client::builder()
+        .tls_backend_native()
+        .http1_only()
+        .no_proxy()
+        .redirect(reqwest::redirect::Policy::limited(1))
+        .retry(reqwest::retry::never())
+        .timeout(Duration::from_secs(2))
+        .build()
+        .unwrap();
+    let client =
+        IikoClient::with_http_client(IikoConfig::new(&http.base_url, "test", "test"), transport);
     let error = tokio::time::timeout(Duration::from_secs(4), client.get("report"))
         .await
         .expect("redirect TLS certificate rejection stalled")
