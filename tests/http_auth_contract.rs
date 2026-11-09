@@ -192,47 +192,31 @@ async fn http_error_statuses_preserve_variants_and_response_messages() {
 }
 
 #[tokio::test]
-async fn redirect_302_discards_post_body_while_307_preserves_xml_body() {
+async fn default_transport_rejects_auth_redirect_without_resending_credentials() {
     let server = MockServer::start(vec![
         Reply::new("302 Found", "").header("Location", "/resto/api/auth-final"),
-        Reply::ok("session"),
-        Reply::new("307 Temporary Redirect", "").header("Location", "/resto/api/xml-final"),
-        Reply::ok("accepted"),
     ])
     .await;
-    let client = server.client(2);
-    assert_eq!(
-        client
-            .post_xml("xml-start", "<request>Ю</request>")
-            .await
-            .unwrap(),
-        "accepted"
-    );
+    let error = server.client(2).authenticate().await.unwrap_err();
+    assert!(matches!(error, IikoError::Authentication(message) if message.contains("302 Found")));
     let requests = server.finish().await;
-    assert_eq!(requests[0].method, "POST");
-    assert_eq!(requests[1].method, "GET");
-    assert!(requests[1].body.is_empty());
-    assert_eq!(requests[1].header("content-type"), None);
-    assert_eq!(requests[2].method, "POST");
-    assert_eq!(requests[3].method, "POST");
-    assert_eq!(requests[3].target, "/resto/api/xml-final");
-    assert_eq!(requests[3].body, requests[2].body);
-    assert_eq!(requests[3].header("content-type"), Some("application/xml"));
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].target, "/resto/api/auth");
 }
 
 #[tokio::test]
-async fn redirect_loop_stops_at_default_limit_and_redacts_the_session_key() {
+async fn default_transport_rejects_read_redirect_without_exposing_the_session_key() {
     let secret = "session-must-not-leak";
-    let mut replies = vec![Reply::ok(secret)];
-    replies.extend((0..11).map(|_| {
-        Reply::new("302 Found", "").header("Location", format!("/resto/api/loop?key={secret}"))
-    }));
-    let server = MockServer::start(replies).await;
+    let server = MockServer::start(vec![
+        Reply::ok(secret),
+        Reply::new("302 Found", "").header("Location", format!("/resto/api/loop?key={secret}")),
+    ])
+    .await;
     let error = server.client(2).get("loop").await.unwrap_err();
-    assert!(matches!(error, IikoError::Http(_)));
+    assert!(matches!(error, IikoError::Api(_)));
     let message = error.to_string();
     assert!(!message.contains(secret));
     assert!(!message.contains("key="));
     assert!(!message.contains(&server.base_url));
-    assert_eq!(server.finish().await.len(), 12);
+    assert_eq!(server.finish().await.len(), 2);
 }

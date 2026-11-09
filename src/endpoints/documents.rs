@@ -1,6 +1,6 @@
 use crate::client::IikoClient;
 use crate::error::Result;
-use crate::xml::request::{DocumentsRequest, Request};
+use crate::xml::request::DocumentsRequest;
 use crate::xml::response::{
     Document, DocumentValidationResult, IncomingInventoryDto, IncomingInventoryValidationResultDto,
     IncomingInvoiceDto, InternalTransferDto, InternalTransferListResult,
@@ -19,20 +19,25 @@ impl<'a> DocumentsEndpoint<'a> {
         Self { client }
     }
 
+    /// Read the document journal with a 4 MiB response ceiling and one safe 401 refresh.
+    /// This POST only reads metadata; mutation endpoints never use its retry policy.
     pub async fn get_documents(
         &self,
         store_id: Option<String>,
         date_from: Option<String>,
         date_to: Option<String>,
     ) -> Result<Vec<Document>> {
-        let request = Request::new(DocumentsRequest {
+        let request = DocumentsRequest {
             store_id,
             date_from,
             date_to,
-        });
-        let xml_body = request.to_xml()?;
+        };
+        let xml_body = quick_xml::se::to_string_with_root("request", &request)?;
 
-        let response_xml = self.client.post_xml("documents", &xml_body).await?;
+        let response_xml = self
+            .client
+            .post_xml_readonly_bounded("documents", &xml_body, 4 * 1024 * 1024)
+            .await?;
         let documents: Vec<Document> = from_str(&response_xml)?;
 
         Ok(documents)
