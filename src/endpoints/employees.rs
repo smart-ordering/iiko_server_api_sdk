@@ -120,7 +120,10 @@ impl<'a> EmployeesEndpoint<'a> {
     /// - Сотрудник с указанным GUID
     pub async fn get_by_id(&self, employee_uuid: Uuid) -> Result<Employee> {
         let endpoint = format!("employees/byId/{}", employee_uuid);
-        let response_xml = self.client.get(&endpoint).await?;
+        let response_xml = self
+            .client
+            .get_readonly_bounded(&endpoint, &[], EMPLOYEES_RESPONSE_BYTES)
+            .await?;
 
         let employee: Employee = from_str(&response_xml)?;
         Ok(employee)
@@ -245,7 +248,7 @@ impl<'a> EmployeesEndpoint<'a> {
 
         let response_xml = self
             .client
-            .get_with_params("employees/search", &params)
+            .get_readonly_bounded("employees/search", &params, EMPLOYEES_RESPONSE_BYTES)
             .await?;
 
         let wrapper: Employees = from_str(&response_xml)?;
@@ -322,3 +325,7 @@ impl<'a> EmployeesEndpoint<'a> {
         self.client.delete(&endpoint).await
     }
 }
+
+#[cfg(test)]
+#[path = "employees_guest_read_tests.rs"]
+mod guest_read_tests;
